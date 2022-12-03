@@ -12,7 +12,7 @@ int main() {
     uron::Window window{800, 600, "Hello Vulkan"};
     uron::Instance instance(validationLayers);
     auto surface = instance.createSurface(window);
-    auto device = instance.pickDevice(validationLayers);
+    auto device = instance.pickDevice(validationLayers, surface);
 
     while (!window.shouldClose()) {
       glfwPollEvents();

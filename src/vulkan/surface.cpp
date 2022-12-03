@@ -6,7 +6,6 @@ namespace uron {
 
 Surface::Surface(const Instance& instance, const Window& window)
     : instance(instance) {
-  VkSurfaceKHR surface;
   VK_CHECK(glfwCreateWindowSurface(instance, window, nullptr, &surface),
            "create window surface");
 }

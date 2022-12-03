@@ -1,5 +1,6 @@
 #include "uron/vulkan/device.h"
 
+#include <set>
 #include <vector>
 
 #include "uron/vulkan/vulkan.h"
@@ -28,7 +29,8 @@ PFN_vkCmdWriteAccelerationStructuresPropertiesKHR
     vkCmdWriteAccelerationStructuresPropertiesKHR = nullptr;
 PFN_vkCmdTraceRaysKHR vkCmdTraceRaysKHR = nullptr;
 
-QueueFamilyIndices Device::findQueueFamilies(VkPhysicalDevice physicalDevice) {
+QueueFamilyIndices Device::findQueueFamilies(VkPhysicalDevice physicalDevice,
+                                             const Surface& surface) {
   QueueFamilyIndices indices;
 
   uint32_t queueFamilyCount = 0;
@@ -44,6 +46,14 @@ QueueFamilyIndices Device::findQueueFamilies(VkPhysicalDevice physicalDevice) {
       indices.graphicsFamily = i;
     }
 
+    VkBool32 presentSupport = false;
+    vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface,
+                                         &presentSupport);
+
+    if (presentSupport) {
+      indices.presentFamily = i;
+    }
+
     if (indices.isComplete()) {
       break;
     }
@@ -54,31 +64,37 @@ QueueFamilyIndices Device::findQueueFamilies(VkPhysicalDevice physicalDevice) {
   return indices;
 }
 
-bool Device::isDeviceSuitable(VkPhysicalDevice physicalDevice) {
-  auto indices = findQueueFamilies(physicalDevice);
+bool Device::isDeviceSuitable(VkPhysicalDevice physicalDevice,
+                              const Surface& surface) {
+  auto indices = findQueueFamilies(physicalDevice, surface);
 
   return indices.isComplete();
 }
 
-Device::Device(VkPhysicalDevice physicalDevice,
+Device::Device(VkPhysicalDevice physicalDevice, const Surface& surface,
                const std::vector<const char*> validationLayers)
     : physicalDevice(physicalDevice) {
-  auto indices = findQueueFamilies(physicalDevice);
+  auto indices = findQueueFamilies(physicalDevice, surface);
 
-  float queuePriority = 1.0f;
-  VkDeviceQueueCreateInfo queueCreateInfo{
-      .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-      .queueFamilyIndex = indices.graphicsFamily.value(),
-      .queueCount = 1,
-      .pQueuePriorities = &queuePriority,
-  };
+  std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+  std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily.value(),
+                                            indices.presentFamily.value()};
+
+  for (float queuePriority = 1.0f; auto queueFamily : uniqueQueueFamilies) {
+    queueCreateInfos.push_back({
+        .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+        .queueFamilyIndex = queueFamily,
+        .queueCount = 1,
+        .pQueuePriorities = &queuePriority,
+    });
+  }
 
   VkPhysicalDeviceFeatures deviceFeatures{};
 
   VkDeviceCreateInfo createInfo{
       .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-      .queueCreateInfoCount = 1,
-      .pQueueCreateInfos = &queueCreateInfo,
+      .queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size()),
+      .pQueueCreateInfos = queueCreateInfos.data(),
       .enabledLayerCount = static_cast<uint32_t>(validationLayers.size()),
       .ppEnabledLayerNames = validationLayers.data(),
       .enabledExtensionCount = 0,
@@ -89,6 +105,7 @@ Device::Device(VkPhysicalDevice physicalDevice,
            "failed to create logical device!");
 
   vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
+  vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
 
   loadDeviceProcAddrs();
 }

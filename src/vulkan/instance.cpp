@@ -10,13 +10,20 @@ namespace uron {
 PFN_vkCreateDebugUtilsMessengerEXT vkCreateDebugUtilsMessengerEXT = nullptr;
 PFN_vkDestroyDebugUtilsMessengerEXT vkDestroyDebugUtilsMessengerEXT = nullptr;
 
-std::vector<const char*> Instance::getRequiredInstanceExtensions() {
+std::vector<const char*> Instance::getRequiredInstanceExtensions(
+    const std::vector<const char*>& validationLayers) {
   uint32_t glfwExtensionCount = 0;
   const char** glfwExtensions =
       glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
-  return std::vector<const char*>(glfwExtensions,
-                                  glfwExtensions + glfwExtensionCount);
+  std::vector<const char*> extensions(glfwExtensions,
+                                      glfwExtensions + glfwExtensionCount);
+
+  if (!validationLayers.empty()) {
+    extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+  }
+
+  return extensions;
 }
 
 void Instance::checkValidationLayerSupport(
@@ -78,11 +85,7 @@ void Instance::createInstance(
       .apiVersion = VK_API_VERSION_1_2,
   };
 
-  auto extensions = getRequiredInstanceExtensions();
-
-  if (!validationLayers.empty()) {
-    extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-  }
+  auto extensions = getRequiredInstanceExtensions(validationLayers);
 
   VkInstanceCreateInfo createInfo{
       .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
@@ -119,8 +122,8 @@ void Instance::setupDebugMessenger(
   }
 }
 
-Device Instance::pickDevice(
-    const std::vector<const char*>& validationLayers) const {
+Device Instance::pickDevice(const std::vector<const char*>& validationLayers,
+                            const Surface& surface) const {
   uint32_t deviceCount = 0;
   vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
 
@@ -132,8 +135,8 @@ Device Instance::pickDevice(
   vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
 
   for (auto device : devices) {
-    if (Device::isDeviceSuitable(device)) {
-      return Device(device, validationLayers);
+    if (Device::isDeviceSuitable(device, surface)) {
+      return Device(device, surface, validationLayers);
     }
   }
 

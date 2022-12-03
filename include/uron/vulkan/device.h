@@ -3,6 +3,7 @@
 #include <optional>
 #include <vector>
 
+#include "uron/vulkan/surface.h"
 #include "uron/vulkan/vulkan.h"
 
 namespace uron {
@@ -29,18 +30,25 @@ extern PFN_vkCmdTraceRaysKHR vkCmdTraceRaysKHR;
 
 struct QueueFamilyIndices {
   std::optional<uint32_t> graphicsFamily;
+  std::optional<uint32_t> presentFamily;
 
-  bool isComplete() { return graphicsFamily.has_value(); }
+  bool isComplete() {
+    return graphicsFamily.has_value() && presentFamily.has_value();
+  }
 };
 
 class Device {
  public:
-  static bool isDeviceSuitable(VkPhysicalDevice physicalDevice);
-
-  Device(VkPhysicalDevice physicalDevice,
+  Device(VkPhysicalDevice physicalDevice, const Surface& surface,
          const std::vector<const char*> validationLayers);
 
   ~Device() { vkDestroyDevice(device, nullptr); }
+
+  static bool isDeviceSuitable(VkPhysicalDevice physicalDevice,
+                               const Surface& surface);
+
+  static QueueFamilyIndices findQueueFamilies(VkPhysicalDevice physicalDevice,
+                                              const Surface& surface);
 
   operator VkDevice() const { return device; }
 
@@ -48,8 +56,7 @@ class Device {
   VkPhysicalDevice physicalDevice;
   VkDevice device;
   VkQueue graphicsQueue;
-
-  static QueueFamilyIndices findQueueFamilies(VkPhysicalDevice physicalDevice);
+  VkQueue presentQueue;
 
   void loadDeviceProcAddrs();
 };

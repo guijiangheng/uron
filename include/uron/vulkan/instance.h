@@ -18,23 +18,24 @@ class Window;
 
 class Instance {
  public:
-  static std::vector<const char*> getRequiredInstanceExtensions();
-
-  static void checkValidationLayerSupport(
-      const std::vector<const char*>& validationLayers);
-
   NON_COPYABLE(Instance);
 
   Instance(const std::vector<const char*>& validationLayers = {});
 
   ~Instance();
 
+  static std::vector<const char*> getRequiredInstanceExtensions(
+      const std::vector<const char*>& validationLayers);
+
+  static void checkValidationLayerSupport(
+      const std::vector<const char*>& validationLayers);
+
   Surface createSurface(const Window& window) const {
     return Surface(*this, window);
   }
 
-  Device pickDevice(
-      const std::vector<const char*>& validationLayers = {}) const;
+  Device pickDevice(const std::vector<const char*>& validationLayers,
+                    const Surface& surface) const;
 
   operator VkInstance() const { return instance; }
 

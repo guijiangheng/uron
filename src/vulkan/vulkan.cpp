@@ -5,10 +5,6 @@
 
 #include "uron/vulkan/device.h"
 
-#define GetDeviceProcAddr(name) \
-  PFN_##name name =             \
-      reinterpret_cast<PFN_##name>(vkGetDeviceProcAddr(device, #name))
-
 namespace uron {
 
 const char* getErrorCode(const VkResult result) {
