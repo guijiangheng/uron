@@ -5,12 +5,10 @@
 #include <GLFW/glfw3.h>
 
 #define GetInstanceProcAddr(name) \
-  PFN_##name name =               \
-      reinterpret_cast<PFN_##name>(vkGetInstanceProcAddr(instance, #name))
+  name = reinterpret_cast<PFN_##name>(vkGetInstanceProcAddr(instance, #name))
 
 #define GetDeviceProcAddr(name) \
-  PFN_##name name =             \
-      reinterpret_cast<PFN_##name>(vkGetDeviceProcAddr(device, #name))
+  name = reinterpret_cast<PFN_##name>(vkGetDeviceProcAddr(device, #name))
 
 namespace uron {
 

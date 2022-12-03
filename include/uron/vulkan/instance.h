@@ -5,6 +5,7 @@
 
 #include "uron/common/common.h"
 #include "uron/gui/window.h"
+#include "uron/vulkan/device.h"
 #include "uron/vulkan/surface.h"
 #include "uron/vulkan/vulkan.h"
 
@@ -32,7 +33,8 @@ class Instance {
     return Surface(*this, window);
   }
 
-  std::vector<VkPhysicalDevice> getPhysicalDevices() const;
+  Device pickDevice(
+      const std::vector<const char*>& validationLayers = {}) const;
 
   operator VkInstance() const { return instance; }
 

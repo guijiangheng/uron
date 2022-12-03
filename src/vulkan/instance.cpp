@@ -3,6 +3,8 @@
 #include <cstring>
 #include <stdexcept>
 
+#include "uron/vulkan/device.h"
+
 namespace uron {
 
 PFN_vkCreateDebugUtilsMessengerEXT vkCreateDebugUtilsMessengerEXT = nullptr;
@@ -117,7 +119,8 @@ void Instance::setupDebugMessenger(
   }
 }
 
-std::vector<VkPhysicalDevice> Instance::getPhysicalDevices() const {
+Device Instance::pickDevice(
+    const std::vector<const char*>& validationLayers) const {
   uint32_t deviceCount = 0;
   vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
 
@@ -128,7 +131,13 @@ std::vector<VkPhysicalDevice> Instance::getPhysicalDevices() const {
   std::vector<VkPhysicalDevice> devices(deviceCount);
   vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
 
-  return devices;
+  for (auto device : devices) {
+    if (Device::isDeviceSuitable(device)) {
+      return Device(device, validationLayers);
+    }
+  }
+
+  throw std::runtime_error("failed to find a suitable GPU!");
 }
 
 }  // namespace uron
