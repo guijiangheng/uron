@@ -8,6 +8,8 @@
 
 namespace uron {
 
+// ------------- begin function pointers ----------
+
 extern PFN_vkSetDebugUtilsObjectNameEXT vkSetDebugUtilsObjectNameEXT;
 
 extern PFN_vkCreateAccelerationStructureKHR vkCreateAccelerationStructureKHR;
@@ -28,6 +30,11 @@ extern PFN_vkCmdWriteAccelerationStructuresPropertiesKHR
     vkCmdWriteAccelerationStructuresPropertiesKHR;
 extern PFN_vkCmdTraceRaysKHR vkCmdTraceRaysKHR;
 
+// ------------- end function pointers ----------
+
+class Window;
+class SwapChain;
+
 struct QueueFamilyIndices {
   std::optional<uint32_t> graphicsFamily;
   std::optional<uint32_t> presentFamily;
@@ -40,17 +47,25 @@ struct QueueFamilyIndices {
 class Device {
  public:
   Device(VkPhysicalDevice physicalDevice, const Surface& surface,
-         const std::vector<const char*> validationLayers);
+         const std::vector<const char*> validationLayers,
+         const std::vector<const char*>& extensions);
 
   ~Device() { vkDestroyDevice(device, nullptr); }
 
+  static void checkExtensionsSupport(
+      VkPhysicalDevice device, const std::vector<const char*>& extensions);
+
   static bool isDeviceSuitable(VkPhysicalDevice physicalDevice,
-                               const Surface& surface);
+                               const Surface& surface,
+                               const std::vector<const char*>& extensions);
 
   static QueueFamilyIndices findQueueFamilies(VkPhysicalDevice physicalDevice,
                                               const Surface& surface);
 
   operator VkDevice() const { return device; }
+  operator VkPhysicalDevice() const { return physicalDevice; }
+
+  SwapChain createSwapChain(const Window& window, const Surface& surface) const;
 
  private:
   VkPhysicalDevice physicalDevice;

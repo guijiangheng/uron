@@ -1,11 +1,18 @@
 #include "uron/vulkan/device.h"
 
+#include <cstring>
+#include <limits>
 #include <set>
+#include <stdexcept>
 #include <vector>
 
+#include "uron/gui/window.h"
+#include "uron/vulkan/swapchain.h"
 #include "uron/vulkan/vulkan.h"
 
 namespace uron {
+
+// -------- begin function pointers ----------------
 
 PFN_vkSetDebugUtilsObjectNameEXT vkSetDebugUtilsObjectNameEXT = nullptr;
 
@@ -28,6 +35,8 @@ PFN_vkCmdCopyAccelerationStructureKHR vkCmdCopyAccelerationStructureKHR =
 PFN_vkCmdWriteAccelerationStructuresPropertiesKHR
     vkCmdWriteAccelerationStructuresPropertiesKHR = nullptr;
 PFN_vkCmdTraceRaysKHR vkCmdTraceRaysKHR = nullptr;
+
+// --------- end function pointers ----
 
 QueueFamilyIndices Device::findQueueFamilies(VkPhysicalDevice physicalDevice,
                                              const Surface& surface) {
@@ -64,15 +73,42 @@ QueueFamilyIndices Device::findQueueFamilies(VkPhysicalDevice physicalDevice,
   return indices;
 }
 
+void Device::checkExtensionsSupport(
+    VkPhysicalDevice device, const std::vector<const char*>& extensions) {
+  uint32_t extensionCount;
+  vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount,
+                                       nullptr);
+
+  std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+  vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount,
+                                       availableExtensions.data());
+
+  for (auto extension : extensions) {
+    auto result = std::find_if(
+        availableExtensions.begin(), availableExtensions.end(),
+        [extension](auto& extensionProperties) {
+          return strcmp(extension, extensionProperties.extensionName) == 0;
+        });
+
+    if (result == availableExtensions.end()) {
+      throw std::runtime_error(std::string(extension) + " is not supported!");
+    }
+  }
+}
+
 bool Device::isDeviceSuitable(VkPhysicalDevice physicalDevice,
-                              const Surface& surface) {
+                              const Surface& surface,
+                              const std::vector<const char*>& extensions) {
+  checkExtensionsSupport(physicalDevice, extensions);
+
   auto indices = findQueueFamilies(physicalDevice, surface);
 
   return indices.isComplete();
 }
 
 Device::Device(VkPhysicalDevice physicalDevice, const Surface& surface,
-               const std::vector<const char*> validationLayers)
+               const std::vector<const char*> validationLayers,
+               const std::vector<const char*>& extensions)
     : physicalDevice(physicalDevice) {
   auto indices = findQueueFamilies(physicalDevice, surface);
 
@@ -97,7 +133,8 @@ Device::Device(VkPhysicalDevice physicalDevice, const Surface& surface,
       .pQueueCreateInfos = queueCreateInfos.data(),
       .enabledLayerCount = static_cast<uint32_t>(validationLayers.size()),
       .ppEnabledLayerNames = validationLayers.data(),
-      .enabledExtensionCount = 0,
+      .enabledExtensionCount = static_cast<uint32_t>(extensions.size()),
+      .ppEnabledExtensionNames = extensions.data(),
       .pEnabledFeatures = &deviceFeatures,
   };
 
@@ -125,6 +162,11 @@ void Device::loadDeviceProcAddrs() {
   GetDeviceProcAddr(vkCmdCopyAccelerationStructureKHR);
   GetDeviceProcAddr(vkCmdWriteAccelerationStructuresPropertiesKHR);
   GetDeviceProcAddr(vkCmdTraceRaysKHR);
+}
+
+SwapChain Device::createSwapChain(const Window& window,
+                                  const Surface& surface) const {
+  return SwapChain(*this, window, surface);
 }
 
 }  // namespace uron

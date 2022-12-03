@@ -37,7 +37,7 @@ void Instance::checkValidationLayerSupport(
   for (auto layer : validationLayers) {
     auto result =
         std::find_if(availableLayers.begin(), availableLayers.end(),
-                     [layer](const VkLayerProperties& layerProperties) {
+                     [layer](auto& layerProperties) {
                        return strcmp(layer, layerProperties.layerName) == 0;
                      });
 
@@ -122,8 +122,9 @@ void Instance::setupDebugMessenger(
   }
 }
 
-Device Instance::pickDevice(const std::vector<const char*>& validationLayers,
-                            const Surface& surface) const {
+Device Instance::pickDevice(const Surface& surface,
+                            const std::vector<const char*>& validationLayers,
+                            const std::vector<const char*>& extensions) const {
   uint32_t deviceCount = 0;
   vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
 
@@ -135,8 +136,8 @@ Device Instance::pickDevice(const std::vector<const char*>& validationLayers,
   vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
 
   for (auto device : devices) {
-    if (Device::isDeviceSuitable(device, surface)) {
-      return Device(device, surface, validationLayers);
+    if (Device::isDeviceSuitable(device, surface, extensions)) {
+      return Device(device, surface, validationLayers, extensions);
     }
   }
 

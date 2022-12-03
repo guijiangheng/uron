@@ -34,8 +34,9 @@ class Instance {
     return Surface(*this, window);
   }
 
-  Device pickDevice(const std::vector<const char*>& validationLayers,
-                    const Surface& surface) const;
+  Device pickDevice(const Surface& surface,
+                    const std::vector<const char*>& validationLayers,
+                    const std::vector<const char*>& extensions) const;
 
   operator VkInstance() const { return instance; }
 
