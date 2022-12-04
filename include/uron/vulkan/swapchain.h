@@ -26,7 +26,9 @@ class SwapChain {
 
   VkFormat getColorImageFormat() const { return swapChainImageFormat; }
 
-  VkExtent2D getExtent() { return swapChainExtent; }
+  const VkExtent2D& getExtent() const { return swapChainExtent; }
+
+  const std::vector<ImageView>& getImageViews() const { return imageViews; }
 
  private:
   const Device& device;

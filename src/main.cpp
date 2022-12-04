@@ -2,6 +2,8 @@
 
 #include "uron/gui/window.h"
 #include "uron/vulkan/device.h"
+#include "uron/vulkan/framebuffer.h"
+#include "uron/vulkan/imageview.h"
 #include "uron/vulkan/instance.h"
 #include "uron/vulkan/pipeline.h"
 #include "uron/vulkan/pipelinelayout.h"
@@ -17,10 +19,22 @@ int main() {
 
   try {
     uron::Window window{800, 600, "Hello Vulkan"};
+
     uron::Instance instance(validationLayers);
     auto surface = instance.createSurface(window);
     auto device = instance.pickDevice(surface, validationLayers, extensions);
+
     auto swapChain = device.createSwapChain(window, surface);
+    auto& imageViews = swapChain.getImageViews();
+    auto renderPass = device.createRenderPass(swapChain.getColorImageFormat());
+
+    std::vector<uron::FrameBuffer> frameBuffers;
+
+    for (auto& extent = swapChain.getExtent(); auto& imageView : imageViews) {
+      std::vector<const uron::ImageView*> attachments = {&imageView};
+      frameBuffers.push_back(
+          device.createFrameBuffer(renderPass, attachments, extent));
+    }
 
     auto vertexShader = device.createShaderModule("../shaders/simple.vert.spv");
     auto fragmentShader =
@@ -31,7 +45,6 @@ int main() {
     };
 
     auto pipelineLayout = device.createPipelineLayout();
-    auto renderPass = device.createRenderPass(swapChain.getColorImageFormat());
     auto pipeline =
         device.createPipeline(pipelineLayout, renderPass, shaderStages);
 

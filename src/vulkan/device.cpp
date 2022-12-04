@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "uron/gui/window.h"
+#include "uron/vulkan/framebuffer.h"
 #include "uron/vulkan/imageview.h"
 #include "uron/vulkan/pipeline.h"
 #include "uron/vulkan/pipelinelayout.h"
@@ -195,6 +196,13 @@ Pipeline Device::createPipeline(
     const PipelineLayout& pipelineLayout, const RenderPass& renderPass,
     const std::vector<VkPipelineShaderStageCreateInfo> shaderStages) const {
   return Pipeline(*this, pipelineLayout, renderPass, shaderStages);
+}
+
+FrameBuffer Device::createFrameBuffer(
+    const RenderPass& renderPass,
+    const std::vector<const ImageView*>& attachments,
+    const VkExtent2D& extent) const {
+  return FrameBuffer(*this, renderPass, attachments, extent);
 }
 
 }  // namespace uron

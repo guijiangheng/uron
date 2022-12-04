@@ -39,6 +39,7 @@ class ShaderModule;
 class PipelineLayout;
 class RenderPass;
 class Pipeline;
+class FrameBuffer;
 
 struct QueueFamilyIndices {
   std::optional<uint32_t> graphicsFamily;
@@ -68,6 +69,7 @@ class Device {
                                               const Surface& surface);
 
   operator VkDevice() const { return device; }
+
   operator VkPhysicalDevice() const { return physicalDevice; }
 
   SwapChain createSwapChain(const Window& window, const Surface& surface) const;
@@ -85,6 +87,11 @@ class Device {
   Pipeline createPipeline(
       const PipelineLayout& pipelineLayout, const RenderPass& renderPass,
       const std::vector<VkPipelineShaderStageCreateInfo> shaderStages) const;
+
+  FrameBuffer createFrameBuffer(
+      const RenderPass& renderPass,
+      const std::vector<const ImageView*>& attachments,
+      const VkExtent2D& extent) const;
 
  private:
   VkPhysicalDevice physicalDevice;
