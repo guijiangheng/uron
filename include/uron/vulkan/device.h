@@ -34,6 +34,7 @@ extern PFN_vkCmdTraceRaysKHR vkCmdTraceRaysKHR;
 
 class Window;
 class SwapChain;
+class ImageView;
 
 struct QueueFamilyIndices {
   std::optional<uint32_t> graphicsFamily;
@@ -66,6 +67,10 @@ class Device {
   operator VkPhysicalDevice() const { return physicalDevice; }
 
   SwapChain createSwapChain(const Window& window, const Surface& surface) const;
+
+  ImageView createImageView(
+      VkImage image, VkFormat format = VK_FORMAT_B8G8R8A8_SRGB,
+      VkImageAspectFlagBits aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT);
 
  private:
   VkPhysicalDevice physicalDevice;

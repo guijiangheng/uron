@@ -5,6 +5,7 @@
 
 #include "uron/gui/window.h"
 #include "uron/vulkan/device.h"
+#include "uron/vulkan/imageview.h"
 
 namespace uron {
 
@@ -131,6 +132,10 @@ SwapChain::SwapChain(const Device& device, const Window& window,
 
   swapChainImageFormat = surfaceFormat.format;
   swapChainExtent = extent;
+
+  for (auto image : swapChainImages) {
+    imageViews.emplace_back(device, image, swapChainImageFormat);
+  }
 }
 
 SwapChain::~SwapChain() { vkDestroySwapchainKHR(device, swapChain, nullptr); }

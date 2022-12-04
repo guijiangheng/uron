@@ -10,6 +10,7 @@ namespace uron {
 class Window;
 class Device;
 class Surface;
+class ImageView;
 
 struct SwapChainSupportDetails {
   VkSurfaceCapabilitiesKHR capabilities;
@@ -31,6 +32,7 @@ class SwapChain {
   std::vector<VkImage> swapChainImages;
   VkFormat swapChainImageFormat;
   VkExtent2D swapChainExtent;
+  std::vector<ImageView> imageViews;
 
   SwapChainSupportDetails querySwapChainSupport();
 

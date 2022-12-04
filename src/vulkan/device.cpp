@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "uron/gui/window.h"
+#include "uron/vulkan/imageview.h"
 #include "uron/vulkan/swapchain.h"
 #include "uron/vulkan/vulkan.h"
 
@@ -167,6 +168,11 @@ void Device::loadDeviceProcAddrs() {
 SwapChain Device::createSwapChain(const Window& window,
                                   const Surface& surface) const {
   return SwapChain(*this, window, surface);
+}
+
+ImageView Device::createImageView(VkImage image, VkFormat format,
+                                  VkImageAspectFlagBits aspectFlags) {
+  return ImageView(*this, image, format, aspectFlags);
 }
 
 }  // namespace uron
