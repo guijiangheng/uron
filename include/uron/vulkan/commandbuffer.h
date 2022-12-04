@@ -19,6 +19,8 @@ class CommandBuffer {
 
   void end() const;
 
+  void reset() const;
+
  private:
   const CommandPool& commandPool;
   VkCommandBuffer commandBuffer;

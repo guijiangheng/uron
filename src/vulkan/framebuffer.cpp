@@ -12,6 +12,7 @@ FrameBuffer::FrameBuffer(const Device& device, const RenderPass& renderPass,
                          const VkExtent2D& extent)
     : device{device} {
   std::vector<VkImageView> mAttachments;
+
   for (auto attachment : attachments) {
     mAttachments.push_back(*attachment);
   }

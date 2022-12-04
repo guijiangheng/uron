@@ -39,7 +39,7 @@ Pipeline::Pipeline(
       .rasterizerDiscardEnable = VK_FALSE,
       .polygonMode = VK_POLYGON_MODE_FILL,
       .cullMode = VK_CULL_MODE_BACK_BIT,
-      .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
+      .frontFace = VK_FRONT_FACE_CLOCKWISE,
       .depthBiasEnable = VK_FALSE,
       .lineWidth = 1.0f,
   };
@@ -65,8 +65,11 @@ Pipeline::Pipeline(
       .blendConstants = {0.0f, 0.0f, 0.0f, 0.0f},
   };
 
-  std::vector<VkDynamicState> dynamicStates = {VK_DYNAMIC_STATE_VIEWPORT,
-                                               VK_DYNAMIC_STATE_SCISSOR};
+  std::vector<VkDynamicState> dynamicStates = {
+      VK_DYNAMIC_STATE_VIEWPORT,
+      VK_DYNAMIC_STATE_SCISSOR,
+  };
+
   VkPipelineDynamicStateCreateInfo dynamicState{
       .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
       .dynamicStateCount = static_cast<uint32_t>(dynamicStates.size()),

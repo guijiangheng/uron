@@ -12,11 +12,21 @@ ImageView::ImageView(const Device& device, VkImage image, VkFormat format,
       .image = image,
       .viewType = VK_IMAGE_VIEW_TYPE_2D,
       .format = format,
-      .subresourceRange = {.aspectMask = aspectFlags,
-                           .baseMipLevel = 0,
-                           .levelCount = 1,
-                           .baseArrayLayer = 0,
-                           .layerCount = 1},
+      .components =
+          {
+              .r = VK_COMPONENT_SWIZZLE_IDENTITY,
+              .g = VK_COMPONENT_SWIZZLE_IDENTITY,
+              .b = VK_COMPONENT_SWIZZLE_IDENTITY,
+              .a = VK_COMPONENT_SWIZZLE_IDENTITY,
+          },
+      .subresourceRange =
+          {
+              .aspectMask = aspectFlags,
+              .baseMipLevel = 0,
+              .levelCount = 1,
+              .baseArrayLayer = 0,
+              .layerCount = 1,
+          },
   };
 
   VK_CHECK(vkCreateImageView(device, &createInfo, nullptr, &imageView),

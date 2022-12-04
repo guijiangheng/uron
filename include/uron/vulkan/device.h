@@ -42,6 +42,8 @@ class RenderPass;
 class Pipeline;
 class FrameBuffer;
 class CommandPool;
+class Fence;
+class Semaphore;
 
 struct QueueFamilyIndices {
   std::optional<uint32_t> graphicsFamily;
@@ -70,10 +72,6 @@ class Device {
   static QueueFamilyIndices findQueueFamilies(VkPhysicalDevice physicalDevice,
                                               const Surface& surface);
 
-  operator VkDevice() const { return device; }
-
-  operator VkPhysicalDevice() const { return physicalDevice; }
-
   QueueFamilyIndices findQueueFamilies() const {
     return findQueueFamilies(physicalDevice, surface);
   };
@@ -100,6 +98,20 @@ class Device {
       const VkExtent2D& extent) const;
 
   CommandPool createCommandPool(uint32_t queueFamilyIndex) const;
+
+  Fence createFence() const;
+
+  Semaphore createSemaphore() const;
+
+  void waitIdle() const;
+
+  operator VkDevice() const { return device; }
+
+  operator VkPhysicalDevice() const { return physicalDevice; }
+
+  VkQueue getGraphicsQueue() const { return graphicsQueue; }
+
+  VkQueue getPresentQueue() const { return presentQueue; }
 
  private:
   const Surface& surface;

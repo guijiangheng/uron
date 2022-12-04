@@ -14,7 +14,7 @@ RenderPass::RenderPass(const Device& device, VkFormat colorImageFormat)
       .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
       .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
       .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-      .finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+      .finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
   };
 
   VkAttachmentReference colorAttachmentRef{
@@ -28,13 +28,23 @@ RenderPass::RenderPass(const Device& device, VkFormat colorImageFormat)
       .pColorAttachments = &colorAttachmentRef,
   };
 
+  VkSubpassDependency dependency{
+      .srcSubpass = VK_SUBPASS_EXTERNAL,
+      .dstSubpass = 0,
+      .srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+      .dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+      .srcAccessMask = 0,
+      .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+  };
+
   VkRenderPassCreateInfo renderPassInfo{
       .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
-      .attachmentCount = static_cast<uint32_t>(1),
+      .attachmentCount = 1,
       .pAttachments = &colorAttachment,
       .subpassCount = 1,
       .pSubpasses = &subpass,
-      .dependencyCount = 0,
+      .dependencyCount = 1,
+      .pDependencies = &dependency,
   };
 
   VK_CHECK(vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass),

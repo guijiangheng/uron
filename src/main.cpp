@@ -4,12 +4,14 @@
 #include "uron/vulkan/commandbuffer.h"
 #include "uron/vulkan/commandpool.h"
 #include "uron/vulkan/device.h"
+#include "uron/vulkan/fence.h"
 #include "uron/vulkan/framebuffer.h"
 #include "uron/vulkan/imageview.h"
 #include "uron/vulkan/instance.h"
 #include "uron/vulkan/pipeline.h"
 #include "uron/vulkan/pipelinelayout.h"
 #include "uron/vulkan/renderpass.h"
+#include "uron/vulkan/semaphore.h"
 #include "uron/vulkan/shadermodule.h"
 #include "uron/vulkan/swapchain.h"
 
@@ -56,14 +58,19 @@ int main() {
         device.createCommandPool(queueFamilyIndices.graphicsFamily.value());
     auto commandBuffer = commandPool.allocateCommandBuffer();
 
-    commandBuffer.begin();
+    auto fence = device.createFence();
+    auto imageAvailableSemaphore = device.createSemaphore();
+    auto renderFinishedSemaphore = device.createSemaphore();
 
-    {
+    auto recordCommandBuffer = [&](uint32_t imageIndex) {
+      commandBuffer.reset();
+      commandBuffer.begin();
+
       VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
       VkRenderPassBeginInfo renderPassInfo{
           .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
           .renderPass = renderPass,
-          .framebuffer = frameBuffers[0],
+          .framebuffer = frameBuffers[imageIndex],
           .renderArea =
               {
                   .offset = {0, 0},
@@ -72,7 +79,6 @@ int main() {
           .clearValueCount = 1,
           .pClearValues = &clearColor,
       };
-
       vkCmdBeginRenderPass(commandBuffer, &renderPassInfo,
                            VK_SUBPASS_CONTENTS_INLINE);
 
@@ -96,14 +102,63 @@ int main() {
       vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
       vkCmdDraw(commandBuffer, 3, 1, 0, 0);
-      vkCmdEndRenderPass(commandBuffer);
-    }
 
-    commandBuffer.end();
+      vkCmdEndRenderPass(commandBuffer);
+
+      commandBuffer.end();
+    };
+
+    auto drawFrame = [&]() {
+      fence.wait(UINT64_MAX);
+      fence.reset();
+
+      uint32_t imageIndex;
+      vkAcquireNextImageKHR(device, swapChain, UINT64_MAX,
+                            imageAvailableSemaphore, VK_NULL_HANDLE,
+                            &imageIndex);
+
+      recordCommandBuffer(imageIndex);
+
+      VkCommandBuffer rawCommandBuffer = commandBuffer;
+      VkSemaphore waitSemaphores[] = {imageAvailableSemaphore};
+      VkSemaphore signalSemaphores[] = {renderFinishedSemaphore};
+      VkPipelineStageFlags waitStages[] = {
+          VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+
+      VkSubmitInfo submitInfo{
+          .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+          .waitSemaphoreCount = 1,
+          .pWaitSemaphores = waitSemaphores,
+          .pWaitDstStageMask = waitStages,
+          .commandBufferCount = 1,
+          .pCommandBuffers = &rawCommandBuffer,
+          .signalSemaphoreCount = 1,
+          .pSignalSemaphores = signalSemaphores,
+      };
+
+      if (vkQueueSubmit(device.getGraphicsQueue(), 1, &submitInfo, fence) !=
+          VK_SUCCESS) {
+        throw std::runtime_error("failed to submit draw command buffer!");
+      }
+
+      VkSwapchainKHR swapChains[] = {swapChain};
+      VkPresentInfoKHR presentInfo{
+          .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+          .waitSemaphoreCount = 1,
+          .pWaitSemaphores = signalSemaphores,
+          .swapchainCount = 1,
+          .pSwapchains = swapChains,
+          .pImageIndices = &imageIndex,
+      };
+      vkQueuePresentKHR(device.getPresentQueue(), &presentInfo);
+    };
 
     while (!window.shouldClose()) {
       glfwPollEvents();
+      drawFrame();
     }
+
+    device.waitIdle();
   } catch (const std::exception& e) {
     std::cout << e.what() << std::endl;
     return EXIT_FAILURE;

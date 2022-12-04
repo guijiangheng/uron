@@ -8,11 +8,13 @@
 
 #include "uron/gui/window.h"
 #include "uron/vulkan/commandpool.h"
+#include "uron/vulkan/fence.h"
 #include "uron/vulkan/framebuffer.h"
 #include "uron/vulkan/imageview.h"
 #include "uron/vulkan/pipeline.h"
 #include "uron/vulkan/pipelinelayout.h"
 #include "uron/vulkan/renderpass.h"
+#include "uron/vulkan/semaphore.h"
 #include "uron/vulkan/shadermodule.h"
 #include "uron/vulkan/surface.h"
 #include "uron/vulkan/swapchain.h"
@@ -208,6 +210,14 @@ FrameBuffer Device::createFrameBuffer(
 
 CommandPool Device::createCommandPool(uint32_t queueFamilyIndex) const {
   return CommandPool(*this, queueFamilyIndex);
+}
+
+Fence Device::createFence() const { return Fence(*this); }
+
+Semaphore Device::createSemaphore() const { return Semaphore(*this); }
+
+void Device::waitIdle() const {
+  VK_CHECK(vkDeviceWaitIdle(device), "wait for a device to become idle");
 }
 
 }  // namespace uron

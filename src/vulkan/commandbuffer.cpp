@@ -33,4 +33,8 @@ void CommandBuffer::end() const {
   VK_CHECK(vkEndCommandBuffer(commandBuffer), "record command buffer");
 }
 
+void CommandBuffer::reset() const {
+  VK_CHECK(vkResetCommandBuffer(commandBuffer, 0), "reset command buffer");
+}
+
 }  // namespace uron

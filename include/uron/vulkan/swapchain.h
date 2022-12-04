@@ -24,6 +24,8 @@ class SwapChain {
 
   ~SwapChain();
 
+  operator VkSwapchainKHR() const { return swapChain; }
+
   VkFormat getColorImageFormat() const { return swapChainImageFormat; }
 
   const VkExtent2D& getExtent() const { return swapChainExtent; }
