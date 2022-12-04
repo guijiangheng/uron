@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "uron/common/common.h"
+#include "uron/common.h"
 #include "uron/vulkan/vulkan.h"
 
 namespace uron {

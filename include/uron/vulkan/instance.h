@@ -3,7 +3,7 @@
 #include <iostream>
 #include <vector>
 
-#include "uron/common/common.h"
+#include "uron/common.h"
 #include "uron/gui/window.h"
 #include "uron/vulkan/device.h"
 #include "uron/vulkan/surface.h"

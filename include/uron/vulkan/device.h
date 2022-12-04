@@ -35,6 +35,7 @@ extern PFN_vkCmdTraceRaysKHR vkCmdTraceRaysKHR;
 class Window;
 class SwapChain;
 class ImageView;
+class ShaderModule;
 
 struct QueueFamilyIndices {
   std::optional<uint32_t> graphicsFamily;
@@ -70,7 +71,9 @@ class Device {
 
   ImageView createImageView(
       VkImage image, VkFormat format = VK_FORMAT_B8G8R8A8_SRGB,
-      VkImageAspectFlagBits aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT);
+      VkImageAspectFlagBits aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT) const;
+
+  ShaderModule createShaderModule(const std::string& filename) const;
 
  private:
   VkPhysicalDevice physicalDevice;

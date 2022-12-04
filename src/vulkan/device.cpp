@@ -8,6 +8,7 @@
 
 #include "uron/gui/window.h"
 #include "uron/vulkan/imageview.h"
+#include "uron/vulkan/shadermodule.h"
 #include "uron/vulkan/swapchain.h"
 #include "uron/vulkan/vulkan.h"
 
@@ -171,8 +172,12 @@ SwapChain Device::createSwapChain(const Window& window,
 }
 
 ImageView Device::createImageView(VkImage image, VkFormat format,
-                                  VkImageAspectFlagBits aspectFlags) {
+                                  VkImageAspectFlagBits aspectFlags) const {
   return ImageView(*this, image, format, aspectFlags);
+}
+
+ShaderModule Device::createShaderModule(const std::string& filename) const {
+  return ShaderModule(*this, filename);
 }
 
 }  // namespace uron

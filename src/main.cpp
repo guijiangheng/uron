@@ -3,6 +3,7 @@
 #include "uron/gui/window.h"
 #include "uron/vulkan/device.h"
 #include "uron/vulkan/instance.h"
+#include "uron/vulkan/shadermodule.h"
 #include "uron/vulkan/swapchain.h"
 
 int main() {
@@ -17,6 +18,9 @@ int main() {
     auto surface = instance.createSurface(window);
     auto device = instance.pickDevice(surface, validationLayers, extensions);
     auto swapChain = device.createSwapChain(window, surface);
+    auto vertexShader = device.createShaderModule("../shaders/simple.vert.spv");
+    auto fragmentShader =
+        device.createShaderModule("../shaders/simple.frag.spv");
 
     while (!window.shouldClose()) {
       glfwPollEvents();
