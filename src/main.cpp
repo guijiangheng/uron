@@ -1,6 +1,8 @@
 #include <iostream>
 
 #include "uron/gui/window.h"
+#include "uron/vulkan/commandbuffer.h"
+#include "uron/vulkan/commandpool.h"
 #include "uron/vulkan/device.h"
 #include "uron/vulkan/framebuffer.h"
 #include "uron/vulkan/imageview.h"
@@ -24,16 +26,17 @@ int main() {
     auto surface = instance.createSurface(window);
     auto device = instance.pickDevice(surface, validationLayers, extensions);
 
-    auto swapChain = device.createSwapChain(window, surface);
+    auto swapChain = device.createSwapChain(window);
+    auto& swapChainExtent = swapChain.getExtent();
     auto& imageViews = swapChain.getImageViews();
     auto renderPass = device.createRenderPass(swapChain.getColorImageFormat());
 
     std::vector<uron::FrameBuffer> frameBuffers;
 
-    for (auto& extent = swapChain.getExtent(); auto& imageView : imageViews) {
+    for (auto& imageView : imageViews) {
       std::vector<const uron::ImageView*> attachments = {&imageView};
       frameBuffers.push_back(
-          device.createFrameBuffer(renderPass, attachments, extent));
+          device.createFrameBuffer(renderPass, attachments, swapChainExtent));
     }
 
     auto vertexShader = device.createShaderModule("../shaders/simple.vert.spv");
@@ -47,6 +50,56 @@ int main() {
     auto pipelineLayout = device.createPipelineLayout();
     auto pipeline =
         device.createPipeline(pipelineLayout, renderPass, shaderStages);
+
+    auto queueFamilyIndices = device.findQueueFamilies();
+    auto commandPool =
+        device.createCommandPool(queueFamilyIndices.graphicsFamily.value());
+    auto commandBuffer = commandPool.allocateCommandBuffer();
+
+    commandBuffer.begin();
+
+    {
+      VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
+      VkRenderPassBeginInfo renderPassInfo{
+          .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+          .renderPass = renderPass,
+          .framebuffer = frameBuffers[0],
+          .renderArea =
+              {
+                  .offset = {0, 0},
+                  .extent = swapChainExtent,
+              },
+          .clearValueCount = 1,
+          .pClearValues = &clearColor,
+      };
+
+      vkCmdBeginRenderPass(commandBuffer, &renderPassInfo,
+                           VK_SUBPASS_CONTENTS_INLINE);
+
+      vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                        pipeline);
+
+      VkViewport viewport{
+          .x = 0.0f,
+          .y = 0.0f,
+          .width = (float)swapChainExtent.width,
+          .height = (float)swapChainExtent.height,
+          .minDepth = 0.0f,
+          .maxDepth = 1.0f,
+      };
+      vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+      VkRect2D scissor{
+          .offset = {0, 0},
+          .extent = swapChainExtent,
+      };
+      vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+      vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+      vkCmdEndRenderPass(commandBuffer);
+    }
+
+    commandBuffer.end();
 
     while (!window.shouldClose()) {
       glfwPollEvents();

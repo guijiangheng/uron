@@ -32,7 +32,6 @@ class SwapChain {
 
  private:
   const Device& device;
-  const Window& window;
   const Surface& surface;
 
   VkSwapchainKHR swapChain;

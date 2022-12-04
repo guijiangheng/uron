@@ -6,6 +6,7 @@
 #include "uron/gui/window.h"
 #include "uron/vulkan/device.h"
 #include "uron/vulkan/imageview.h"
+#include "uron/vulkan/surface.h"
 
 namespace uron {
 
@@ -80,7 +81,7 @@ VkExtent2D SwapChain::chooseSwapExtent(
 
 SwapChain::SwapChain(const Device& device, const Window& window,
                      const Surface& surface)
-    : device(device), window(window), surface(surface) {
+    : device(device), surface(surface) {
   auto swapChainSupport = querySwapChainSupport();
 
   auto surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);

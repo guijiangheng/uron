@@ -1,9 +1,9 @@
 #pragma once
 
 #include <optional>
+#include <string>
 #include <vector>
 
-#include "uron/vulkan/surface.h"
 #include "uron/vulkan/vulkan.h"
 
 namespace uron {
@@ -33,6 +33,7 @@ extern PFN_vkCmdTraceRaysKHR vkCmdTraceRaysKHR;
 // ------------- end function pointers ----------
 
 class Window;
+class Surface;
 class SwapChain;
 class ImageView;
 class ShaderModule;
@@ -40,6 +41,7 @@ class PipelineLayout;
 class RenderPass;
 class Pipeline;
 class FrameBuffer;
+class CommandPool;
 
 struct QueueFamilyIndices {
   std::optional<uint32_t> graphicsFamily;
@@ -72,7 +74,11 @@ class Device {
 
   operator VkPhysicalDevice() const { return physicalDevice; }
 
-  SwapChain createSwapChain(const Window& window, const Surface& surface) const;
+  QueueFamilyIndices findQueueFamilies() const {
+    return findQueueFamilies(physicalDevice, surface);
+  };
+
+  SwapChain createSwapChain(const Window& window) const;
 
   ImageView createImageView(
       VkImage image, VkFormat format = VK_FORMAT_B8G8R8A8_SRGB,
@@ -93,7 +99,11 @@ class Device {
       const std::vector<const ImageView*>& attachments,
       const VkExtent2D& extent) const;
 
+  CommandPool createCommandPool(uint32_t queueFamilyIndex) const;
+
  private:
+  const Surface& surface;
+
   VkPhysicalDevice physicalDevice;
   VkDevice device;
   VkQueue graphicsQueue;

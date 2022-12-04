@@ -7,12 +7,14 @@
 #include <vector>
 
 #include "uron/gui/window.h"
+#include "uron/vulkan/commandpool.h"
 #include "uron/vulkan/framebuffer.h"
 #include "uron/vulkan/imageview.h"
 #include "uron/vulkan/pipeline.h"
 #include "uron/vulkan/pipelinelayout.h"
 #include "uron/vulkan/renderpass.h"
 #include "uron/vulkan/shadermodule.h"
+#include "uron/vulkan/surface.h"
 #include "uron/vulkan/swapchain.h"
 #include "uron/vulkan/vulkan.h"
 
@@ -115,7 +117,7 @@ bool Device::isDeviceSuitable(VkPhysicalDevice physicalDevice,
 Device::Device(VkPhysicalDevice physicalDevice, const Surface& surface,
                const std::vector<const char*> validationLayers,
                const std::vector<const char*>& extensions)
-    : physicalDevice(physicalDevice) {
+    : surface{surface}, physicalDevice(physicalDevice) {
   auto indices = findQueueFamilies(physicalDevice, surface);
 
   std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
@@ -170,8 +172,7 @@ void Device::loadDeviceProcAddrs() {
   GetDeviceProcAddr(vkCmdTraceRaysKHR);
 }
 
-SwapChain Device::createSwapChain(const Window& window,
-                                  const Surface& surface) const {
+SwapChain Device::createSwapChain(const Window& window) const {
   return SwapChain(*this, window, surface);
 }
 
@@ -203,6 +204,10 @@ FrameBuffer Device::createFrameBuffer(
     const std::vector<const ImageView*>& attachments,
     const VkExtent2D& extent) const {
   return FrameBuffer(*this, renderPass, attachments, extent);
+}
+
+CommandPool Device::createCommandPool(uint32_t queueFamilyIndex) const {
+  return CommandPool(*this, queueFamilyIndex);
 }
 
 }  // namespace uron
