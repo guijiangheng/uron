@@ -4,6 +4,7 @@
 #include "uron/vulkan/device.h"
 #include "uron/vulkan/instance.h"
 #include "uron/vulkan/pipelinelayout.h"
+#include "uron/vulkan/renderpass.h"
 #include "uron/vulkan/shadermodule.h"
 #include "uron/vulkan/swapchain.h"
 
@@ -23,6 +24,7 @@ int main() {
     auto fragmentShader =
         device.createShaderModule("../shaders/simple.frag.spv");
     auto pipelineLayout = device.createPipelineLayout();
+    auto renderPass = device.createRenderPass(swapChain.getColorImageFormat());
 
     while (!window.shouldClose()) {
       glfwPollEvents();

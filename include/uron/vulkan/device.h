@@ -37,6 +37,7 @@ class SwapChain;
 class ImageView;
 class ShaderModule;
 class PipelineLayout;
+class RenderPass;
 
 struct QueueFamilyIndices {
   std::optional<uint32_t> graphicsFamily;
@@ -77,6 +78,8 @@ class Device {
   ShaderModule createShaderModule(const std::string& filename) const;
 
   PipelineLayout createPipelineLayout() const;
+
+  RenderPass createRenderPass(VkFormat colorImageFormat) const;
 
  private:
   VkPhysicalDevice physicalDevice;

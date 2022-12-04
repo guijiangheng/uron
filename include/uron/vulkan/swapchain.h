@@ -21,7 +21,12 @@ struct SwapChainSupportDetails {
 class SwapChain {
  public:
   SwapChain(const Device& device, const Window& window, const Surface& surface);
+
   ~SwapChain();
+
+  VkFormat getColorImageFormat() const { return swapChainImageFormat; }
+
+  VkExtent2D getExtent() { return swapChainExtent; }
 
  private:
   const Device& device;

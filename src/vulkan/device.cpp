@@ -9,6 +9,7 @@
 #include "uron/gui/window.h"
 #include "uron/vulkan/imageview.h"
 #include "uron/vulkan/pipelinelayout.h"
+#include "uron/vulkan/renderpass.h"
 #include "uron/vulkan/shadermodule.h"
 #include "uron/vulkan/swapchain.h"
 #include "uron/vulkan/vulkan.h"
@@ -183,6 +184,10 @@ ShaderModule Device::createShaderModule(const std::string& filename) const {
 
 PipelineLayout Device::createPipelineLayout() const {
   return PipelineLayout(*this);
+}
+
+RenderPass Device::createRenderPass(VkFormat colorImageFormat) const {
+  return RenderPass(*this, colorImageFormat);
 }
 
 }  // namespace uron
