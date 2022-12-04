@@ -3,6 +3,7 @@
 #include "uron/gui/window.h"
 #include "uron/vulkan/device.h"
 #include "uron/vulkan/instance.h"
+#include "uron/vulkan/pipelinelayout.h"
 #include "uron/vulkan/shadermodule.h"
 #include "uron/vulkan/swapchain.h"
 
@@ -21,6 +22,7 @@ int main() {
     auto vertexShader = device.createShaderModule("../shaders/simple.vert.spv");
     auto fragmentShader =
         device.createShaderModule("../shaders/simple.frag.spv");
+    auto pipelineLayout = device.createPipelineLayout();
 
     while (!window.shouldClose()) {
       glfwPollEvents();
