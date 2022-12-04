@@ -18,6 +18,8 @@ class ShaderModule {
   VkPipelineShaderStageCreateInfo createShaderStage(
       VkShaderStageFlagBits stage) const;
 
+  operator VkShaderModule() const { return shaderModule; }
+
  private:
   const Device& device;
   VkShaderModule shaderModule;

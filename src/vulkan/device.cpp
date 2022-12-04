@@ -8,6 +8,7 @@
 
 #include "uron/gui/window.h"
 #include "uron/vulkan/imageview.h"
+#include "uron/vulkan/pipeline.h"
 #include "uron/vulkan/pipelinelayout.h"
 #include "uron/vulkan/renderpass.h"
 #include "uron/vulkan/shadermodule.h"
@@ -188,6 +189,12 @@ PipelineLayout Device::createPipelineLayout() const {
 
 RenderPass Device::createRenderPass(VkFormat colorImageFormat) const {
   return RenderPass(*this, colorImageFormat);
+}
+
+Pipeline Device::createPipeline(
+    const PipelineLayout& pipelineLayout, const RenderPass& renderPass,
+    const std::vector<VkPipelineShaderStageCreateInfo> shaderStages) const {
+  return Pipeline(*this, pipelineLayout, renderPass, shaderStages);
 }
 
 }  // namespace uron

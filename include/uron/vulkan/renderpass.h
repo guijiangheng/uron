@@ -15,6 +15,8 @@ class RenderPass {
 
   ~RenderPass();
 
+  operator VkRenderPass() const { return renderPass; }
+
  private:
   const Device& device;
   VkRenderPass renderPass;

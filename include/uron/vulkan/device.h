@@ -38,6 +38,7 @@ class ImageView;
 class ShaderModule;
 class PipelineLayout;
 class RenderPass;
+class Pipeline;
 
 struct QueueFamilyIndices {
   std::optional<uint32_t> graphicsFamily;
@@ -80,6 +81,10 @@ class Device {
   PipelineLayout createPipelineLayout() const;
 
   RenderPass createRenderPass(VkFormat colorImageFormat) const;
+
+  Pipeline createPipeline(
+      const PipelineLayout& pipelineLayout, const RenderPass& renderPass,
+      const std::vector<VkPipelineShaderStageCreateInfo> shaderStages) const;
 
  private:
   VkPhysicalDevice physicalDevice;

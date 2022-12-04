@@ -14,6 +14,8 @@ class PipelineLayout {
 
   ~PipelineLayout();
 
+  operator VkPipelineLayout() const { return pipelineLayout; }
+
  private:
   const Device& device;
   VkPipelineLayout pipelineLayout;
