@@ -19,6 +19,12 @@ CommandBuffer::CommandBuffer(const CommandPool& commandPool)
       "create command buffer");
 }
 
+CommandBuffer::CommandBuffer(CommandBuffer&& other)
+    : commandPool{other.commandPool} {
+  commandBuffer = other.commandBuffer;
+  other.commandBuffer = VK_NULL_HANDLE;
+}
+
 void CommandBuffer::begin() const {
   VkCommandBufferBeginInfo beginInfo = {
       .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,

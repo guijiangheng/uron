@@ -15,14 +15,34 @@
 #include "uron/vulkan/shadermodule.h"
 #include "uron/vulkan/swapchain.h"
 
+const std::vector<const char*> validationLayers = {
+    "VK_LAYER_KHRONOS_validation"};
+
+const std::vector<const char*> extensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+
+constexpr int MAX_FRAMES_IN_FLIGHT = 2;
+
+std::vector<uron::FrameBuffer> createFrameBuffers(
+    const uron::Device& device, const uron::SwapChain& swapChain,
+    const uron::RenderPass& renderPass) {
+  auto& swapChainExtent = swapChain.getExtent();
+  auto& imageViews = swapChain.getImageViews();
+  std::vector<uron::FrameBuffer> frameBuffers;
+
+  for (auto& imageView : imageViews) {
+    std::vector<const uron::ImageView*> attachments = {&imageView};
+    frameBuffers.push_back(
+        device.createFrameBuffer(renderPass, attachments, swapChainExtent));
+  }
+
+  return frameBuffers;
+}
+
 int main() {
-  const std::vector<const char*> validationLayers = {
-      "VK_LAYER_KHRONOS_validation"};
-
-  const std::vector<const char*> extensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
-
   try {
+    auto resized = false;
     uron::Window window{800, 600, "Hello Vulkan"};
+    window.addOnResize([&](int, int) { resized = true; });
 
     uron::Instance instance(validationLayers);
     auto surface = instance.createSurface(window);
@@ -30,16 +50,8 @@ int main() {
 
     auto swapChain = device.createSwapChain(window);
     auto& swapChainExtent = swapChain.getExtent();
-    auto& imageViews = swapChain.getImageViews();
     auto renderPass = device.createRenderPass(swapChain.getColorImageFormat());
-
-    std::vector<uron::FrameBuffer> frameBuffers;
-
-    for (auto& imageView : imageViews) {
-      std::vector<const uron::ImageView*> attachments = {&imageView};
-      frameBuffers.push_back(
-          device.createFrameBuffer(renderPass, attachments, swapChainExtent));
-    }
+    auto frameBuffers = createFrameBuffers(device, swapChain, renderPass);
 
     auto vertexShader = device.createShaderModule("../shaders/simple.vert.spv");
     auto fragmentShader =
@@ -56,15 +68,24 @@ int main() {
     auto queueFamilyIndices = device.findQueueFamilies();
     auto commandPool =
         device.createCommandPool(queueFamilyIndices.graphicsFamily.value());
-    auto commandBuffer = commandPool.allocateCommandBuffer();
 
-    auto fence = device.createFence();
-    auto imageAvailableSemaphore = device.createSemaphore();
-    auto renderFinishedSemaphore = device.createSemaphore();
+    int currentFrame = 0;
+    std::vector<uron::Fence> inFlightFences;
+    std::vector<uron::Semaphore> imageAvailableSemaphores;
+    std::vector<uron::Semaphore> renderFinishedSemaphores;
+    std::vector<uron::CommandBuffer> commandBuffers;
 
-    auto recordCommandBuffer = [&](uint32_t imageIndex) {
-      commandBuffer.reset();
-      commandBuffer.begin();
+    for (auto i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+      inFlightFences.emplace_back(device);
+      imageAvailableSemaphores.emplace_back(device);
+      renderFinishedSemaphores.emplace_back(device);
+      commandBuffers.emplace_back(commandPool);
+    }
+
+    auto recordCommandBuffer = [&](uron::CommandBuffer& commandBuffer,
+                                   uint32_t imageIndex) {
+      commandBuffers[currentFrame].reset();
+      commandBuffers[currentFrame].begin();
 
       VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
       VkRenderPassBeginInfo renderPassInfo{
@@ -109,19 +130,28 @@ int main() {
     };
 
     auto drawFrame = [&]() {
-      fence.wait(UINT64_MAX);
-      fence.reset();
+      inFlightFences[currentFrame].wait(UINT64_MAX);
 
       uint32_t imageIndex;
-      vkAcquireNextImageKHR(device, swapChain, UINT64_MAX,
-                            imageAvailableSemaphore, VK_NULL_HANDLE,
-                            &imageIndex);
+      auto result = vkAcquireNextImageKHR(
+          device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame],
+          VK_NULL_HANDLE, &imageIndex);
 
-      recordCommandBuffer(imageIndex);
+      if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+        swapChain.recreate();
+        frameBuffers = createFrameBuffers(device, swapChain, renderPass);
+        return;
+      } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+        throw std::runtime_error("failed to acquire swap chain image!");
+      }
 
-      VkCommandBuffer rawCommandBuffer = commandBuffer;
-      VkSemaphore waitSemaphores[] = {imageAvailableSemaphore};
-      VkSemaphore signalSemaphores[] = {renderFinishedSemaphore};
+      inFlightFences[currentFrame].reset();
+
+      recordCommandBuffer(commandBuffers[currentFrame], imageIndex);
+
+      VkCommandBuffer rawCommandBuffer = commandBuffers[currentFrame];
+      VkSemaphore waitSemaphores[] = {imageAvailableSemaphores[currentFrame]};
+      VkSemaphore signalSemaphores[] = {renderFinishedSemaphores[currentFrame]};
       VkPipelineStageFlags waitStages[] = {
           VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 
@@ -136,8 +166,8 @@ int main() {
           .pSignalSemaphores = signalSemaphores,
       };
 
-      if (vkQueueSubmit(device.getGraphicsQueue(), 1, &submitInfo, fence) !=
-          VK_SUCCESS) {
+      if (vkQueueSubmit(device.getGraphicsQueue(), 1, &submitInfo,
+                        inFlightFences[currentFrame]) != VK_SUCCESS) {
         throw std::runtime_error("failed to submit draw command buffer!");
       }
 
@@ -150,7 +180,18 @@ int main() {
           .pSwapchains = swapChains,
           .pImageIndices = &imageIndex,
       };
-      vkQueuePresentKHR(device.getPresentQueue(), &presentInfo);
+      result = vkQueuePresentKHR(device.getPresentQueue(), &presentInfo);
+
+      if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR ||
+          resized) {
+        resized = false;
+        swapChain.recreate();
+        frameBuffers = createFrameBuffers(device, swapChain, renderPass);
+      } else if (result != VK_SUCCESS) {
+        throw std::runtime_error("failed to present swap chain image!");
+      }
+
+      currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
     };
 
     while (!window.shouldClose()) {

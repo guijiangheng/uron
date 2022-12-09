@@ -13,6 +13,8 @@ class Fence {
 
   Fence(const Device& device);
 
+  Fence(Fence&& other);
+
   ~Fence();
 
   operator VkFence() const { return fence; }

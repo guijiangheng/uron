@@ -81,7 +81,13 @@ VkExtent2D SwapChain::chooseSwapExtent(
 
 SwapChain::SwapChain(const Device& device, const Window& window,
                      const Surface& surface)
-    : device(device), surface(surface) {
+    : device(device), window{window}, surface(surface) {
+  recreate();
+}
+
+SwapChain::~SwapChain() { vkDestroySwapchainKHR(device, swapChain, nullptr); }
+
+void SwapChain::create() {
   auto swapChainSupport = querySwapChainSupport();
 
   auto surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
@@ -94,6 +100,8 @@ SwapChain::SwapChain(const Device& device, const Window& window,
       imageCount > swapChainSupport.capabilities.maxImageCount) {
     imageCount = swapChainSupport.capabilities.maxImageCount;
   }
+
+  auto oldSwapchain = swapChain;
 
   VkSwapchainCreateInfoKHR createInfo{
       .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
@@ -108,7 +116,7 @@ SwapChain::SwapChain(const Device& device, const Window& window,
       .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
       .presentMode = presentMode,
       .clipped = VK_TRUE,
-      .oldSwapchain = VK_NULL_HANDLE,
+      .oldSwapchain = oldSwapchain,
   };
 
   auto indices = Device::findQueueFamilies(device, surface);
@@ -126,19 +134,33 @@ SwapChain::SwapChain(const Device& device, const Window& window,
   VK_CHECK(vkCreateSwapchainKHR(device, &createInfo, nullptr, &swapChain),
            "failed to create swap chain!");
 
+  vkDestroySwapchainKHR(device, oldSwapchain, nullptr);
+
   vkGetSwapchainImagesKHR(device, swapChain, &imageCount, nullptr);
-  swapChainImages.resize(imageCount);
-  vkGetSwapchainImagesKHR(device, swapChain, &imageCount,
-                          swapChainImages.data());
+  images.resize(imageCount);
+  vkGetSwapchainImagesKHR(device, swapChain, &imageCount, images.data());
 
   swapChainImageFormat = surfaceFormat.format;
   swapChainExtent = extent;
 
-  for (auto image : swapChainImages) {
+  for (auto image : images) {
     imageViews.emplace_back(device, image, swapChainImageFormat);
   }
 }
 
-SwapChain::~SwapChain() { vkDestroySwapchainKHR(device, swapChain, nullptr); }
+void SwapChain::recreate() {
+  int width = 0, height = 0;
+  glfwGetFramebufferSize(window, &width, &height);
+
+  while (width == 0 || height == 0) {
+    glfwGetFramebufferSize(window, &width, &height);
+    glfwWaitEvents();
+  }
+
+  device.waitIdle();
+  images.clear();
+  imageViews.clear();
+  create();
+}
 
 }  // namespace uron

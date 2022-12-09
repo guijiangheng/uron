@@ -13,6 +13,8 @@ class Semaphore {
 
   Semaphore(const Device& device);
 
+  Semaphore(Semaphore&& other);
+
   ~Semaphore();
 
   operator VkSemaphore() const { return semaphore; }

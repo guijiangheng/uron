@@ -13,6 +13,8 @@ class CommandBuffer {
 
   CommandBuffer(const CommandPool& commandPool);
 
+  CommandBuffer(CommandBuffer&& other);
+
   operator VkCommandBuffer() const { return commandBuffer; }
 
   void begin() const;

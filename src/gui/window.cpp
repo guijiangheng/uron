@@ -36,7 +36,7 @@ void Window::glfwScrollCallback(GLFWwindow* window, const double xoffset,
   for (auto& callback : self->onScrollChanged) callback(xoffset, yoffset);
 }
 
-Window::Window(int width, int height, const char* title) {
+Window::Window(int width, int height, const char* title, bool resizable) {
   glfwSetErrorCallback(glfwErrorCallback);
 
   if (!glfwInit()) {
@@ -48,7 +48,7 @@ Window::Window(int width, int height, const char* title) {
   }
 
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-  glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+  glfwWindowHint(GLFW_RESIZABLE, resizable ? GLFW_TRUE : GLFW_FALSE);
 
   window = glfwCreateWindow(width, height, "Uron", nullptr, nullptr);
 

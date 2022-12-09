@@ -32,17 +32,18 @@ class SwapChain {
 
   const std::vector<ImageView>& getImageViews() const { return imageViews; }
 
+  void recreate();
+
  private:
+  const Window& window;
   const Device& device;
   const Surface& surface;
 
-  VkSwapchainKHR swapChain;
-  std::vector<VkImage> swapChainImages;
+  VkSwapchainKHR swapChain = VK_NULL_HANDLE;
   VkFormat swapChainImageFormat;
   VkExtent2D swapChainExtent;
+  std::vector<VkImage> images;
   std::vector<ImageView> imageViews;
-
-  SwapChainSupportDetails querySwapChainSupport();
 
   static VkSurfaceFormatKHR chooseSwapSurfaceFormat(
       const std::vector<VkSurfaceFormatKHR>& availableFormats);
@@ -52,6 +53,10 @@ class SwapChain {
 
   static VkExtent2D chooseSwapExtent(
       const Window& window, const VkSurfaceCapabilitiesKHR& capabilities);
+
+  SwapChainSupportDetails querySwapChainSupport();
+
+  void create();
 };
 
 }  // namespace uron
