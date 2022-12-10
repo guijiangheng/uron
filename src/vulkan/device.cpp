@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "uron/gui/window.h"
+#include "uron/vulkan/buffer.h"
 #include "uron/vulkan/commandpool.h"
 #include "uron/vulkan/fence.h"
 #include "uron/vulkan/framebuffer.h"
@@ -175,46 +176,48 @@ void Device::loadDeviceProcAddrs() {
 }
 
 SwapChain Device::createSwapChain(const Window& window) const {
-  return SwapChain(*this, window, surface);
+  return {*this, window, surface};
 }
 
 ImageView Device::createImageView(VkImage image, VkFormat format,
                                   VkImageAspectFlagBits aspectFlags) const {
-  return ImageView(*this, image, format, aspectFlags);
+  return {*this, image, format, aspectFlags};
 }
 
 ShaderModule Device::createShaderModule(const std::string& filename) const {
-  return ShaderModule(*this, filename);
+  return {*this, filename};
 }
 
-PipelineLayout Device::createPipelineLayout() const {
-  return PipelineLayout(*this);
-}
+PipelineLayout Device::createPipelineLayout() const { return {*this}; }
 
 RenderPass Device::createRenderPass(VkFormat colorImageFormat) const {
-  return RenderPass(*this, colorImageFormat);
+  return {*this, colorImageFormat};
 }
 
 Pipeline Device::createPipeline(
     const PipelineLayout& pipelineLayout, const RenderPass& renderPass,
     const std::vector<VkPipelineShaderStageCreateInfo> shaderStages) const {
-  return Pipeline(*this, pipelineLayout, renderPass, shaderStages);
+  return {*this, pipelineLayout, renderPass, shaderStages};
 }
 
 FrameBuffer Device::createFrameBuffer(
     const RenderPass& renderPass,
     const std::vector<const ImageView*>& attachments,
     const VkExtent2D& extent) const {
-  return FrameBuffer(*this, renderPass, attachments, extent);
+  return {*this, renderPass, attachments, extent};
 }
 
 CommandPool Device::createCommandPool(uint32_t queueFamilyIndex) const {
-  return CommandPool(*this, queueFamilyIndex);
+  return {*this, queueFamilyIndex};
 }
 
-Fence Device::createFence() const { return Fence(*this); }
+Buffer Device::createBuffer(size_t size, VkBufferUsageFlagBits usage) const {
+  return {*this, size, usage};
+}
 
-Semaphore Device::createSemaphore() const { return Semaphore(*this); }
+Fence Device::createFence() const { return {*this}; }
+
+Semaphore Device::createSemaphore() const { return {*this}; }
 
 void Device::waitIdle() const {
   VK_CHECK(vkDeviceWaitIdle(device), "wait for a device to become idle");

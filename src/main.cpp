@@ -1,6 +1,8 @@
+#include <cstring>
 #include <iostream>
 
 #include "uron/gui/window.h"
+#include "uron/vulkan/buffer.h"
 #include "uron/vulkan/commandbuffer.h"
 #include "uron/vulkan/commandpool.h"
 #include "uron/vulkan/device.h"
@@ -8,6 +10,7 @@
 #include "uron/vulkan/framebuffer.h"
 #include "uron/vulkan/imageview.h"
 #include "uron/vulkan/instance.h"
+#include "uron/vulkan/model.h"
 #include "uron/vulkan/pipeline.h"
 #include "uron/vulkan/pipelinelayout.h"
 #include "uron/vulkan/renderpass.h"
@@ -21,6 +24,21 @@ const std::vector<const char*> validationLayers = {
 const std::vector<const char*> extensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
 constexpr int MAX_FRAMES_IN_FLIGHT = 2;
+
+const std::vector<uron::Vertex> vertices = {
+    {
+        .position = {0.0f, -0.5f, 0.0f},
+        .color = {1.0f, 0.0f, 0.0f},
+    },
+    {
+        .position = {0.5f, 0.5f, 0.0f},
+        .color = {0.0f, 1.0f, 0.0f},
+    },
+    {
+        .position = {-0.5f, 0.5f, 0.0f},
+        .color = {0.0f, 0.0f, 1.0f},
+    },
+};
 
 std::vector<uron::FrameBuffer> createFrameBuffers(
     const uron::Device& device, const uron::SwapChain& swapChain,
@@ -82,6 +100,13 @@ int main() {
       commandBuffers.emplace_back(commandPool);
     }
 
+    auto bufferSize = sizeof(uron::Vertex) * vertices.size();
+    auto buffer =
+        device.createBuffer(bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+    auto data = buffer.map(0, bufferSize);
+    memcpy(data, vertices.data(), bufferSize);
+    buffer.unmap();
+
     auto recordCommandBuffer = [&](uron::CommandBuffer& commandBuffer,
                                    uint32_t imageIndex) {
       commandBuffers[currentFrame].reset();
@@ -122,7 +147,11 @@ int main() {
       };
       vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-      vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+      VkBuffer buffers[] = {buffer};
+      VkDeviceSize offsets[] = {0};
+      vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers, offsets);
+
+      vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
 
       vkCmdEndRenderPass(commandBuffer);
 

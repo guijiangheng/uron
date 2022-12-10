@@ -44,6 +44,7 @@ class FrameBuffer;
 class CommandPool;
 class Fence;
 class Semaphore;
+class Buffer;
 
 struct QueueFamilyIndices {
   std::optional<uint32_t> graphicsFamily;
@@ -98,6 +99,8 @@ class Device {
       const VkExtent2D& extent) const;
 
   CommandPool createCommandPool(uint32_t queueFamilyIndex) const;
+
+  Buffer createBuffer(size_t size, VkBufferUsageFlagBits usage) const;
 
   Fence createFence() const;
 

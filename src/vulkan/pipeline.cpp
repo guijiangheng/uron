@@ -1,6 +1,7 @@
 #include "uron/vulkan/pipeline.h"
 
 #include "uron/vulkan/device.h"
+#include "uron/vulkan/model.h"
 #include "uron/vulkan/pipelinelayout.h"
 #include "uron/vulkan/renderpass.h"
 
@@ -11,12 +12,16 @@ Pipeline::Pipeline(
     const RenderPass& renderPass,
     const std::vector<VkPipelineShaderStageCreateInfo> shaderStages)
     : device{device} {
+  auto bindingDescription = Vertex::getBindingDescription();
+  auto attributeDescriptions = Vertex::getAttributeDescriptions();
+
   VkPipelineVertexInputStateCreateInfo vertexInputInfo{
       .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-      .vertexBindingDescriptionCount = static_cast<uint32_t>(0),
-      .pVertexBindingDescriptions = nullptr,
-      .vertexAttributeDescriptionCount = static_cast<uint32_t>(0),
-      .pVertexAttributeDescriptions = nullptr,
+      .vertexBindingDescriptionCount = 1,
+      .pVertexBindingDescriptions = &bindingDescription,
+      .vertexAttributeDescriptionCount =
+          static_cast<uint32_t>(attributeDescriptions.size()),
+      .pVertexAttributeDescriptions = attributeDescriptions.data(),
   };
 
   VkPipelineInputAssemblyStateCreateInfo inputAssembly{
