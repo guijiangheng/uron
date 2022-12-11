@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include "uron/common.h"
 #include "uron/vulkan/vulkan.h"
 
@@ -18,7 +20,9 @@ class CommandPool {
 
   operator VkCommandPool() const { return commandPool; }
 
-  CommandBuffer allocateCommandBuffer() const;
+  CommandBuffer allocate() const;
+
+  void execute(const std::function<void(CommandBuffer&)>& func) const;
 
  private:
   const Device& device;

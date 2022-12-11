@@ -25,10 +25,10 @@ CommandBuffer::CommandBuffer(CommandBuffer&& other)
   other.commandBuffer = VK_NULL_HANDLE;
 }
 
-void CommandBuffer::begin() const {
+void CommandBuffer::begin(VkCommandBufferUsageFlags flags) const {
   VkCommandBufferBeginInfo beginInfo = {
       .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-      .flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT,
+      .flags = flags,
   };
 
   VK_CHECK(vkBeginCommandBuffer(commandBuffer, &beginInfo),

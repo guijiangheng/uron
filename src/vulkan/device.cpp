@@ -211,8 +211,9 @@ CommandPool Device::createCommandPool(uint32_t queueFamilyIndex) const {
   return {*this, queueFamilyIndex};
 }
 
-Buffer Device::createBuffer(size_t size, VkBufferUsageFlagBits usage) const {
-  return {*this, size, usage};
+Buffer Device::createBuffer(size_t size, VkBufferUsageFlags usage,
+                            VkMemoryPropertyFlags propertyFlags) const {
+  return {*this, size, usage, propertyFlags};
 }
 
 Fence Device::createFence() const { return {*this}; }

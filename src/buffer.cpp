@@ -2,16 +2,19 @@
 
 #include <stdexcept>
 
+#include "uron/vulkan/commandbuffer.h"
+#include "uron/vulkan/commandpool.h"
 #include "uron/vulkan/device.h"
 
 namespace uron {
 
-Buffer::Buffer(const Device& device, size_t size, VkBufferUsageFlagBits usage)
+Buffer::Buffer(const Device& device, size_t size, VkBufferUsageFlags usage,
+               VkMemoryPropertyFlags propertyFlags)
     : device{device} {
   VkBufferCreateInfo createInfo{
       .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
       .size = size,
-      .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+      .usage = usage,
       .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
   };
 
@@ -25,9 +28,7 @@ Buffer::Buffer(const Device& device, size_t size, VkBufferUsageFlagBits usage)
       .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
       .allocationSize = memRequirements.size,
       .memoryTypeIndex =
-          findMemoryType(memRequirements.memoryTypeBits,
-                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                             VK_MEMORY_PROPERTY_HOST_COHERENT_BIT),
+          findMemoryType(memRequirements.memoryTypeBits, propertyFlags),
   };
 
   VK_CHECK(vkAllocateMemory(device, &allocInfo, nullptr, &memory),
@@ -54,6 +55,18 @@ uint32_t Buffer::findMemoryType(uint32_t typeFilter,
 Buffer::~Buffer() {
   vkDestroyBuffer(device, buffer, nullptr);
   vkFreeMemory(device, memory, nullptr);
+}
+
+void Buffer::copy(const CommandPool& pool, const Buffer& src,
+                  VkDeviceSize offset, VkDeviceSize size) const {
+  pool.execute([&](const CommandBuffer& commandBuffer) {
+    VkBufferCopy copyRegion = {
+        .srcOffset = offset,
+        .dstOffset = 0,
+        .size = size,
+    };
+    vkCmdCopyBuffer(commandBuffer, src, buffer, 1, &copyRegion);
+  });
 }
 
 void* Buffer::map(size_t offset, size_t size) const {

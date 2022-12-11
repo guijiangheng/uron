@@ -17,7 +17,8 @@ class CommandBuffer {
 
   operator VkCommandBuffer() const { return commandBuffer; }
 
-  void begin() const;
+  void begin(VkCommandBufferUsageFlags flags =
+                 VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT) const;
 
   void end() const;
 

@@ -64,7 +64,14 @@
     "shared_mutex": "cpp",
     "stop_token": "cpp",
     "thread": "cpp",
-    "fstream": "cpp"
+    "fstream": "cpp",
+    "cassert": "cpp",
+    "cerrno": "cpp",
+    "cfloat": "cpp",
+    "climits": "cpp",
+    "ios": "cpp",
+    "queue": "cpp",
+    "cstdbool": "cpp"
   },
   "cSpell.words": [
     "multisampling",

@@ -26,19 +26,13 @@ const std::vector<const char*> extensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
 const std::vector<uron::Vertex> vertices = {
-    {
-        .position = {0.0f, -0.5f, 0.0f},
-        .color = {1.0f, 0.0f, 0.0f},
-    },
-    {
-        .position = {0.5f, 0.5f, 0.0f},
-        .color = {0.0f, 1.0f, 0.0f},
-    },
-    {
-        .position = {-0.5f, 0.5f, 0.0f},
-        .color = {0.0f, 0.0f, 1.0f},
-    },
+    {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
+    {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
+    {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}},
+    {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}},
 };
+
+const std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0};
 
 std::vector<uron::FrameBuffer> createFrameBuffers(
     const uron::Device& device, const uron::SwapChain& swapChain,
@@ -101,11 +95,32 @@ int main() {
     }
 
     auto bufferSize = sizeof(uron::Vertex) * vertices.size();
-    auto buffer =
-        device.createBuffer(bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
-    auto data = buffer.map(0, bufferSize);
+    auto stagingBuffer =
+        device.createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                                VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    auto data = stagingBuffer.map(0, bufferSize);
     memcpy(data, vertices.data(), bufferSize);
-    buffer.unmap();
+    stagingBuffer.unmap();
+
+    auto buffer = device.createBuffer(
+        bufferSize,
+        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    buffer.copy(commandPool, stagingBuffer, 0, bufferSize);
+
+    auto indexBufferSize = sizeof(indices[0]) * indices.size();
+    auto indexStagingBuffer =
+        device.createBuffer(indexBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                                VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    auto indicesData = indexStagingBuffer.map(0, indexBufferSize);
+    memcpy(indicesData, indices.data(), indexBufferSize);
+    auto indexBuffer = device.createBuffer(
+        indexBufferSize,
+        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    indexBuffer.copy(commandPool, indexStagingBuffer, 0, indexBufferSize);
 
     auto recordCommandBuffer = [&](uron::CommandBuffer& commandBuffer,
                                    uint32_t imageIndex) {
@@ -150,8 +165,10 @@ int main() {
       VkBuffer buffers[] = {buffer};
       VkDeviceSize offsets[] = {0};
       vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers, offsets);
+      vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT16);
 
-      vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+      vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1,
+                       0, 0, 0);
 
       vkCmdEndRenderPass(commandBuffer);
 

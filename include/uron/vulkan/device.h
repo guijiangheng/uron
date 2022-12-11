@@ -100,7 +100,8 @@ class Device {
 
   CommandPool createCommandPool(uint32_t queueFamilyIndex) const;
 
-  Buffer createBuffer(size_t size, VkBufferUsageFlagBits usage) const;
+  Buffer createBuffer(size_t size, VkBufferUsageFlags usage,
+                      VkMemoryPropertyFlags propertyFlags) const;
 
   Fence createFence() const;
 
