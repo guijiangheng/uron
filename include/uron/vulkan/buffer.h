@@ -15,6 +15,8 @@ class Buffer {
   Buffer(const Device& device, size_t size, VkBufferUsageFlags usage,
          VkMemoryPropertyFlags propertyFlags);
 
+  Buffer(Buffer&& other);
+
   ~Buffer();
 
   void copy(const CommandPool& pool, const Buffer& src, VkDeviceSize offset,

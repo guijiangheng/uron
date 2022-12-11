@@ -24,8 +24,7 @@ class DescriptorSetBindings {
 
   DescriptorSetLayout createLayout() const;
 
-  DescriptorPool createPool(VkDescriptorPoolCreateFlags flags,
-                            uint32_t maxSets) const;
+  DescriptorPool createPool(uint32_t maxSets) const;
 
  private:
   const Device& device;
@@ -39,6 +38,8 @@ class DescriptorSetLayout {
   DescriptorSetLayout(
       const Device& device,
       const std::vector<VkDescriptorSetLayoutBinding>& bindings);
+
+  DescriptorSetLayout(DescriptorSetLayout&& other);
 
   ~DescriptorSetLayout();
 
@@ -55,7 +56,7 @@ class DescriptorPool {
 
   DescriptorPool(const Device& device,
                  const std::vector<VkDescriptorPoolSize>& poolSizes,
-                 VkDescriptorPoolCreateFlags flags, uint32_t maxSets);
+                 uint32_t maxSets);
 
   ~DescriptorPool();
 
@@ -70,12 +71,10 @@ class DescriptorPool {
 
 class DescriptorSet {
  public:
-  NON_COPYABLE(DescriptorSet);
-
   DescriptorSet(const Device& device, const DescriptorPool& pool,
                 const DescriptorSetLayout& layout);
 
-  ~DescriptorSet();
+  void write(const VkDescriptorBufferInfo& bufferInfo) const;
 
   operator VkDescriptorSet() const { return descriptorSet; }
 

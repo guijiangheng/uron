@@ -188,7 +188,10 @@ ShaderModule Device::createShaderModule(const std::string& filename) const {
   return {*this, filename};
 }
 
-PipelineLayout Device::createPipelineLayout() const { return {*this}; }
+PipelineLayout Device::createPipelineLayout(
+    const std::vector<const DescriptorSetLayout*>& layouts) const {
+  return {*this, layouts};
+}
 
 RenderPass Device::createRenderPass(VkFormat colorImageFormat) const {
   return {*this, colorImageFormat};
@@ -196,7 +199,7 @@ RenderPass Device::createRenderPass(VkFormat colorImageFormat) const {
 
 Pipeline Device::createPipeline(
     const PipelineLayout& pipelineLayout, const RenderPass& renderPass,
-    const std::vector<VkPipelineShaderStageCreateInfo> shaderStages) const {
+    const std::vector<VkPipelineShaderStageCreateInfo>& shaderStages) const {
   return {*this, pipelineLayout, renderPass, shaderStages};
 }
 

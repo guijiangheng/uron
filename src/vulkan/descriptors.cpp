@@ -11,7 +11,7 @@ DescriptorSetBindings::DescriptorSetBindings(const Device& device)
 
 void DescriptorSetBindings::addBinding(
     const VkDescriptorSetLayoutBinding& binding) {
-  assert(bindings.count(binding.binding) && "Binding already exists");
+  assert(bindings.count(binding.binding) == 0 && "Binding already exists");
   bindings[binding.binding] = binding;
 }
 
@@ -25,8 +25,7 @@ DescriptorSetLayout DescriptorSetBindings::createLayout() const {
   return {device, mBindings};
 }
 
-DescriptorPool DescriptorSetBindings::createPool(
-    VkDescriptorPoolCreateFlags flags, uint32_t maxSets) const {
+DescriptorPool DescriptorSetBindings::createPool(uint32_t maxSets) const {
   std::vector<VkDescriptorPoolSize> poolSizes;
 
   for (auto& [binding, info] : bindings) {
@@ -36,7 +35,7 @@ DescriptorPool DescriptorSetBindings::createPool(
     });
   }
 
-  return {device, poolSizes, flags, maxSets};
+  return {device, poolSizes, maxSets};
 }
 
 DescriptorSetLayout::DescriptorSetLayout(
@@ -54,17 +53,22 @@ DescriptorSetLayout::DescriptorSetLayout(
            "create descriptor set layout");
 }
 
+DescriptorSetLayout::DescriptorSetLayout(DescriptorSetLayout&& other)
+    : device{other.device} {
+  layout = other.layout;
+  other.layout = nullptr;
+}
+
 DescriptorSetLayout::~DescriptorSetLayout() {
   vkDestroyDescriptorSetLayout(device, layout, nullptr);
 }
 
 DescriptorPool::DescriptorPool(
     const Device& device, const std::vector<VkDescriptorPoolSize>& poolSizes,
-    VkDescriptorPoolCreateFlags flags, uint32_t maxSets)
+    uint32_t maxSets)
     : device{device} {
   VkDescriptorPoolCreateInfo descriptorPoolInfo{
       .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-      .flags = flags,
       .maxSets = maxSets,
       .poolSizeCount = static_cast<uint32_t>(poolSizes.size()),
       .pPoolSizes = poolSizes.data(),
@@ -98,8 +102,18 @@ DescriptorSet::DescriptorSet(const Device& device, const DescriptorPool& pool,
            "create descriptor set");
 }
 
-DescriptorSet::~DescriptorSet() {
-  vkFreeDescriptorSets(device, pool, 1, &descriptorSet);
+void DescriptorSet::write(const VkDescriptorBufferInfo& bufferInfo) const {
+  VkWriteDescriptorSet descriptorWrite{
+      .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+      .dstSet = descriptorSet,
+      .dstBinding = 0,
+      .dstArrayElement = 0,
+      .descriptorCount = 1,
+      .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+      .pBufferInfo = &bufferInfo,
+  };
+
+  vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
 }
 
 }  // namespace uron

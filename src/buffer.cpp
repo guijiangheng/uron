@@ -37,6 +37,18 @@ Buffer::Buffer(const Device& device, size_t size, VkBufferUsageFlags usage,
   vkBindBufferMemory(device, buffer, memory, 0);
 }
 
+Buffer::Buffer(Buffer&& other) : device{other.device} {
+  buffer = other.buffer;
+  memory = other.memory;
+  other.buffer = VK_NULL_HANDLE;
+  other.memory = VK_NULL_HANDLE;
+}
+
+Buffer::~Buffer() {
+  vkDestroyBuffer(device, buffer, nullptr);
+  vkFreeMemory(device, memory, nullptr);
+}
+
 uint32_t Buffer::findMemoryType(uint32_t typeFilter,
                                 VkMemoryPropertyFlags flags) const {
   VkPhysicalDeviceMemoryProperties memProperties;
@@ -50,11 +62,6 @@ uint32_t Buffer::findMemoryType(uint32_t typeFilter,
   }
 
   throw std::runtime_error("failed to find suitable memory type!");
-}
-
-Buffer::~Buffer() {
-  vkDestroyBuffer(device, buffer, nullptr);
-  vkFreeMemory(device, memory, nullptr);
 }
 
 void Buffer::copy(const CommandPool& pool, const Buffer& src,

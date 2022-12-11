@@ -45,6 +45,7 @@ class CommandPool;
 class Fence;
 class Semaphore;
 class Buffer;
+class DescriptorSetLayout;
 
 struct QueueFamilyIndices {
   std::optional<uint32_t> graphicsFamily;
@@ -85,13 +86,14 @@ class Device {
 
   ShaderModule createShaderModule(const std::string& filename) const;
 
-  PipelineLayout createPipelineLayout() const;
+  PipelineLayout createPipelineLayout(
+      const std::vector<const DescriptorSetLayout*>& layouts) const;
 
   RenderPass createRenderPass(VkFormat colorImageFormat) const;
 
   Pipeline createPipeline(
       const PipelineLayout& pipelineLayout, const RenderPass& renderPass,
-      const std::vector<VkPipelineShaderStageCreateInfo> shaderStages) const;
+      const std::vector<VkPipelineShaderStageCreateInfo>& shaderStages) const;
 
   FrameBuffer createFrameBuffer(
       const RenderPass& renderPass,

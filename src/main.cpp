@@ -1,3 +1,4 @@
+#include <chrono>
 #include <cstring>
 #include <iostream>
 
@@ -5,6 +6,7 @@
 #include "uron/vulkan/buffer.h"
 #include "uron/vulkan/commandbuffer.h"
 #include "uron/vulkan/commandpool.h"
+#include "uron/vulkan/descriptors.h"
 #include "uron/vulkan/device.h"
 #include "uron/vulkan/fence.h"
 #include "uron/vulkan/framebuffer.h"
@@ -17,6 +19,16 @@
 #include "uron/vulkan/semaphore.h"
 #include "uron/vulkan/shadermodule.h"
 #include "uron/vulkan/swapchain.h"
+
+#define GLM_FORCE_RADIANS
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+struct UniformBufferObject {
+  alignas(16) glm::mat4 model;
+  alignas(16) glm::mat4 view;
+  alignas(16) glm::mat4 proj;
+};
 
 const std::vector<const char*> validationLayers = {
     "VK_LAYER_KHRONOS_validation"};
@@ -73,7 +85,23 @@ int main() {
         fragmentShader.createShaderStage(VK_SHADER_STAGE_FRAGMENT_BIT),
     };
 
-    auto pipelineLayout = device.createPipelineLayout();
+    uron::DescriptorSetBindings bindings(device);
+    bindings.addBinding({
+        .binding = 0,
+        .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+        .descriptorCount = 1,
+        .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+    });
+    auto descriptorSetLayout = bindings.createLayout();
+    std::vector<const uron::DescriptorSetLayout*> descriptorSetLayouts = {
+        &descriptorSetLayout};
+
+    auto descriptorPool = bindings.createPool(MAX_FRAMES_IN_FLIGHT);
+    std::vector<uron::DescriptorSet> descriptorSets;
+    descriptorSets.push_back(descriptorPool.allocate(descriptorSetLayout));
+    descriptorSets.push_back(descriptorPool.allocate(descriptorSetLayout));
+
+    auto pipelineLayout = device.createPipelineLayout(descriptorSetLayouts);
     auto pipeline =
         device.createPipeline(pipelineLayout, renderPass, shaderStages);
 
@@ -93,6 +121,29 @@ int main() {
       renderFinishedSemaphores.emplace_back(device);
       commandBuffers.emplace_back(commandPool);
     }
+
+    std::vector<uron::Buffer> uniformBuffers;
+    std::array<void*, MAX_FRAMES_IN_FLIGHT> uniformBufferAddrs;
+
+    auto uniformBufferSize = sizeof(UniformBufferObject);
+    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+      uniformBuffers.emplace_back(device, uniformBufferSize,
+                                  VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                                      VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+      uniformBufferAddrs[i] = (uniformBuffers[i].map(0, uniformBufferSize));
+    }
+
+    descriptorSets[0].write({
+        .buffer = uniformBuffers[0],
+        .offset = 0,
+        .range = uniformBufferSize,
+    });
+    descriptorSets[1].write({
+        .buffer = uniformBuffers[1],
+        .offset = 0,
+        .range = uniformBufferSize,
+    });
 
     auto bufferSize = sizeof(uron::Vertex) * vertices.size();
     auto stagingBuffer =
@@ -121,6 +172,28 @@ int main() {
         VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
     indexBuffer.copy(commandPool, indexStagingBuffer, 0, indexBufferSize);
+
+    auto updateUniformBuffer = [&](uint32_t currentImage) {
+      static auto startTime = std::chrono::high_resolution_clock::now();
+
+      auto currentTime = std::chrono::high_resolution_clock::now();
+      float time = std::chrono::duration<float, std::chrono::seconds::period>(
+                       currentTime - startTime)
+                       .count();
+
+      UniformBufferObject ubo{};
+      ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f),
+                              glm::vec3(0.0f, 0.0f, 1.0f));
+      ubo.view =
+          glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f),
+                      glm::vec3(0.0f, 0.0f, 1.0f));
+      ubo.proj = glm::perspective(
+          glm::radians(45.0f),
+          swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
+      ubo.proj[1][1] *= -1;
+
+      memcpy(uniformBufferAddrs[currentImage], &ubo, sizeof(ubo));
+    };
 
     auto recordCommandBuffer = [&](uron::CommandBuffer& commandBuffer,
                                    uint32_t imageIndex) {
@@ -164,8 +237,12 @@ int main() {
 
       VkBuffer buffers[] = {buffer};
       VkDeviceSize offsets[] = {0};
+      VkDescriptorSet mDescriptorSet = descriptorSets[currentFrame];
       vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers, offsets);
       vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+      vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                              pipelineLayout, 0, 1, &mDescriptorSet, 0,
+                              nullptr);
 
       vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1,
                        0, 0, 0);
@@ -190,6 +267,8 @@ int main() {
       } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
         throw std::runtime_error("failed to acquire swap chain image!");
       }
+
+      updateUniformBuffer(currentFrame);
 
       inFlightFences[currentFrame].reset();
 

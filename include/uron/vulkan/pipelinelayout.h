@@ -5,12 +5,14 @@
 namespace uron {
 
 class Device;
+class DescriptorSetLayout;
 
 class PipelineLayout {
  public:
   NON_COPYABLE(PipelineLayout);
 
-  PipelineLayout(const Device& device);
+  PipelineLayout(const Device& device,
+                 const std::vector<const DescriptorSetLayout*>& layouts);
 
   ~PipelineLayout();
 
