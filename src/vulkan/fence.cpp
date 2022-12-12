@@ -13,7 +13,7 @@ Fence::Fence(const Device& device) : device{device} {
   VK_CHECK(vkCreateFence(device, &createInfo, nullptr, &fence), "create fence");
 }
 
-Fence::Fence(Fence&& other) : device{other.device} {
+Fence::Fence(Fence&& other) noexcept : device{other.device} {
   fence = other.fence;
   other.fence = VK_NULL_HANDLE;
 }

@@ -13,7 +13,7 @@ class CommandBuffer {
 
   CommandBuffer(const CommandPool& commandPool);
 
-  CommandBuffer(CommandBuffer&& other);
+  CommandBuffer(CommandBuffer&& other) noexcept;
 
   operator VkCommandBuffer() const { return commandBuffer; }
 

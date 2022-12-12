@@ -18,6 +18,11 @@ CommandPool::CommandPool(const Device& device, uint32_t queueFamilyIndex)
            "create command pool failed");
 }
 
+CommandPool::CommandPool(CommandPool&& other) noexcept : device{other.device} {
+  commandPool = other.commandPool;
+  other.commandPool = VK_NULL_HANDLE;
+}
+
 CommandPool::~CommandPool() {
   vkDestroyCommandPool(device, commandPool, nullptr);
 }

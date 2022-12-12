@@ -12,7 +12,7 @@ Semaphore::Semaphore(const Device& device) : device{device} {
            "create semaphore");
 }
 
-Semaphore::Semaphore(Semaphore&& other) : device(other.device) {
+Semaphore::Semaphore(Semaphore&& other) noexcept : device(other.device) {
   semaphore = other.semaphore;
   other.semaphore = VK_NULL_HANDLE;
 }

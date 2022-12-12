@@ -16,6 +16,8 @@ class CommandPool {
 
   CommandPool(const Device& device, uint32_t queueFamilyIndex);
 
+  CommandPool(CommandPool&& other) noexcept;
+
   ~CommandPool();
 
   operator VkCommandPool() const { return commandPool; }

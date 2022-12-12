@@ -13,7 +13,7 @@ class Semaphore {
 
   Semaphore(const Device& device);
 
-  Semaphore(Semaphore&& other);
+  Semaphore(Semaphore&& other) noexcept;
 
   ~Semaphore();
 

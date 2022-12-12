@@ -19,7 +19,7 @@ CommandBuffer::CommandBuffer(const CommandPool& commandPool)
       "create command buffer");
 }
 
-CommandBuffer::CommandBuffer(CommandBuffer&& other)
+CommandBuffer::CommandBuffer(CommandBuffer&& other) noexcept
     : commandPool{other.commandPool} {
   commandBuffer = other.commandBuffer;
   other.commandBuffer = VK_NULL_HANDLE;

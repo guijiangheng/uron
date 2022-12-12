@@ -53,10 +53,10 @@ DescriptorSetLayout::DescriptorSetLayout(
            "create descriptor set layout");
 }
 
-DescriptorSetLayout::DescriptorSetLayout(DescriptorSetLayout&& other)
+DescriptorSetLayout::DescriptorSetLayout(DescriptorSetLayout&& other) noexcept
     : device{other.device} {
   layout = other.layout;
-  other.layout = nullptr;
+  other.layout = VK_NULL_HANDLE;
 }
 
 DescriptorSetLayout::~DescriptorSetLayout() {
@@ -76,6 +76,12 @@ DescriptorPool::DescriptorPool(
 
   VK_CHECK(vkCreateDescriptorPool(device, &descriptorPoolInfo, nullptr, &pool),
            "create descriptor pool");
+}
+
+DescriptorPool::DescriptorPool(DescriptorPool&& other) noexcept
+    : device{other.device} {
+  pool = other.pool;
+  other.pool = VK_NULL_HANDLE;
 }
 
 DescriptorPool::~DescriptorPool() {

@@ -33,6 +33,11 @@ ImageView::ImageView(const Device& device, VkImage image, VkFormat format,
            "failed to create image view");
 }
 
+ImageView::ImageView(ImageView&& other) noexcept : device(other.device) {
+  imageView = other.imageView;
+  other.imageView = VK_NULL_HANDLE;
+}
+
 ImageView::~ImageView() { vkDestroyImageView(device, imageView, nullptr); }
 
 }  // namespace uron

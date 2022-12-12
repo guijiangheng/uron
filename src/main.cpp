@@ -158,7 +158,7 @@ int main() {
         bufferSize,
         VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    buffer.copy(commandPool, stagingBuffer, 0, bufferSize);
+    buffer.copy(commandPool, stagingBuffer, bufferSize);
 
     auto indexBufferSize = sizeof(indices[0]) * indices.size();
     auto indexStagingBuffer =
@@ -171,7 +171,7 @@ int main() {
         indexBufferSize,
         VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    indexBuffer.copy(commandPool, indexStagingBuffer, 0, indexBufferSize);
+    indexBuffer.copy(commandPool, indexStagingBuffer, indexBufferSize);
 
     auto updateUniformBuffer = [&](uint32_t currentImage) {
       static auto startTime = std::chrono::high_resolution_clock::now();

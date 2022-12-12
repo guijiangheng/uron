@@ -31,9 +31,9 @@ FrameBuffer::FrameBuffer(const Device& device, const RenderPass& renderPass,
            "create frame buffer");
 }
 
-FrameBuffer::FrameBuffer(FrameBuffer&& rhs) : device{rhs.device} {
-  frameBuffer = rhs.frameBuffer;
-  rhs.frameBuffer = nullptr;
+FrameBuffer::FrameBuffer(FrameBuffer&& other) noexcept : device{other.device} {
+  frameBuffer = other.frameBuffer;
+  other.frameBuffer = VK_NULL_HANDLE;
 }
 
 FrameBuffer::~FrameBuffer() {

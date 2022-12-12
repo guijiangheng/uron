@@ -39,7 +39,7 @@ class DescriptorSetLayout {
       const Device& device,
       const std::vector<VkDescriptorSetLayoutBinding>& bindings);
 
-  DescriptorSetLayout(DescriptorSetLayout&& other);
+  DescriptorSetLayout(DescriptorSetLayout&& other) noexcept;
 
   ~DescriptorSetLayout();
 
@@ -57,6 +57,8 @@ class DescriptorPool {
   DescriptorPool(const Device& device,
                  const std::vector<VkDescriptorPoolSize>& poolSizes,
                  uint32_t maxSets);
+
+  DescriptorPool(DescriptorPool&& other) noexcept;
 
   ~DescriptorPool();
 
