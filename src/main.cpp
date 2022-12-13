@@ -10,17 +10,21 @@
 #include "uron/vulkan/device.h"
 #include "uron/vulkan/fence.h"
 #include "uron/vulkan/framebuffer.h"
+#include "uron/vulkan/image.h"
 #include "uron/vulkan/imageview.h"
 #include "uron/vulkan/instance.h"
 #include "uron/vulkan/model.h"
 #include "uron/vulkan/pipeline.h"
 #include "uron/vulkan/pipelinelayout.h"
 #include "uron/vulkan/renderpass.h"
+#include "uron/vulkan/sampler.h"
 #include "uron/vulkan/semaphore.h"
 #include "uron/vulkan/shadermodule.h"
 #include "uron/vulkan/swapchain.h"
+#include "uron/vulkan/texture.h"
 
 #define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -38,13 +42,22 @@ const std::vector<const char*> extensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
 const std::vector<uron::Vertex> vertices = {
-    {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
-    {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
-    {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}},
-    {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}},
+    {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {}, {1.0f, 0.0f}},
+    {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {}, {0.0f, 0.0f}},
+    {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {}, {0.0f, 1.0f}},
+    {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {}, {1.0f, 1.0f}},
+
+    {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {}, {1.0f, 0.0f}},
+    {{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {}, {0.0f, 0.0f}},
+    {{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {}, {0.0f, 1.0f}},
+    {{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {}, {1.0f, 1.0f}},
 };
 
-const std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0};
+const std::vector<uint16_t> indices = {
+    0, 1, 2, 2, 3, 0,
+
+    4, 5, 6, 6, 7, 4,
+};
 
 std::vector<uron::FrameBuffer> createFrameBuffers(
     const uron::Device& device, const uron::SwapChain& swapChain,
@@ -64,6 +77,8 @@ std::vector<uron::FrameBuffer> createFrameBuffers(
 
 int main() {
   try {
+    uron::TextureResource textureResource("../assets/textures/texture.jpg");
+
     auto resized = false;
     uron::Window window{800, 600, "Hello Vulkan"};
     window.addOnResize([&](int, int) { resized = true; });
@@ -86,12 +101,19 @@ int main() {
     };
 
     uron::DescriptorSetBindings bindings(device);
-    bindings.addBinding({
-        .binding = 0,
-        .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-        .descriptorCount = 1,
-        .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
-    });
+    bindings
+        .addBinding({
+            .binding = 0,
+            .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            .descriptorCount = 1,
+            .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+        })
+        .addBinding({
+            .binding = 1,
+            .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+            .descriptorCount = 1,
+            .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+        });
     auto descriptorSetLayout = bindings.createLayout();
     std::vector<const uron::DescriptorSetLayout*> descriptorSetLayouts = {
         &descriptorSetLayout};
@@ -134,16 +156,22 @@ int main() {
       uniformBufferAddrs[i] = (uniformBuffers[i].map(0, uniformBufferSize));
     }
 
-    descriptorSets[0].write({
-        .buffer = uniformBuffers[0],
-        .offset = 0,
-        .range = uniformBufferSize,
-    });
-    descriptorSets[1].write({
-        .buffer = uniformBuffers[1],
-        .offset = 0,
-        .range = uniformBufferSize,
-    });
+    auto texture = uron::Texture(device, commandPool, textureResource);
+
+    for (auto i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+      descriptorSets[i]
+          .write(0,
+                 {
+                     .buffer = uniformBuffers[i],
+                     .offset = 0,
+                     .range = uniformBufferSize,
+                 })
+          .write(1, {
+                        .sampler = texture,
+                        .imageView = texture,
+                        .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                    });
+    }
 
     auto bufferSize = sizeof(uron::Vertex) * vertices.size();
     auto stagingBuffer =

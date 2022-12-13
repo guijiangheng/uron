@@ -11,7 +11,7 @@ class ShaderModule {
  public:
   NON_COPYABLE(ShaderModule);
 
-  ShaderModule(const Device& device, const std::string& filename);
+  ShaderModule(const Device& device, std::string filename);
 
   ~ShaderModule();
 

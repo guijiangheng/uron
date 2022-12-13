@@ -20,7 +20,8 @@ class DescriptorSetBindings {
 
   DescriptorSetBindings(const Device& device);
 
-  void addBinding(const VkDescriptorSetLayoutBinding& binding);
+  DescriptorSetBindings& addBinding(
+      const VkDescriptorSetLayoutBinding& binding);
 
   DescriptorSetLayout createLayout() const;
 
@@ -76,7 +77,11 @@ class DescriptorSet {
   DescriptorSet(const Device& device, const DescriptorPool& pool,
                 const DescriptorSetLayout& layout);
 
-  void write(const VkDescriptorBufferInfo& bufferInfo) const;
+  const DescriptorSet& write(uint32_t dstBinding,
+                             const VkDescriptorBufferInfo& bufferInfo) const;
+
+  const DescriptorSet& write(uint32_t dstBinding,
+                             const VkDescriptorImageInfo& imageInfo) const;
 
   operator VkDescriptorSet() const { return descriptorSet; }
 

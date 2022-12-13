@@ -22,13 +22,15 @@ class Buffer {
 
   ~Buffer();
 
-  void copy(const CommandPool& commandPool, const Buffer& src,
-            VkDeviceSize size, VkDeviceSize srcOffset = 0,
-            VkDeviceSize dstOffset = 0) const;
+  void fill(const void* data, VkDeviceSize offset, VkDeviceSize size) const;
 
   void* map(VkDeviceSize offset, VkDeviceSize size) const;
 
   void unmap() const;
+
+  void copy(const CommandPool& commandPool, const Buffer& src,
+            VkDeviceSize size, VkDeviceSize srcOffset = 0,
+            VkDeviceSize dstOffset = 0) const;
 
   operator VkBuffer() const { return buffer; }
 

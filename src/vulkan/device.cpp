@@ -11,10 +11,12 @@
 #include "uron/vulkan/commandpool.h"
 #include "uron/vulkan/fence.h"
 #include "uron/vulkan/framebuffer.h"
+#include "uron/vulkan/image.h"
 #include "uron/vulkan/imageview.h"
 #include "uron/vulkan/pipeline.h"
 #include "uron/vulkan/pipelinelayout.h"
 #include "uron/vulkan/renderpass.h"
+#include "uron/vulkan/sampler.h"
 #include "uron/vulkan/semaphore.h"
 #include "uron/vulkan/shadermodule.h"
 #include "uron/vulkan/surface.h"
@@ -112,9 +114,11 @@ bool Device::isDeviceSuitable(VkPhysicalDevice physicalDevice,
                               const std::vector<const char*>& extensions) {
   checkExtensionsSupport(physicalDevice, extensions);
 
-  auto indices = findQueueFamilies(physicalDevice, surface);
+  VkPhysicalDeviceFeatures features;
+  vkGetPhysicalDeviceFeatures(physicalDevice, &features);
 
-  return indices.isComplete();
+  return findQueueFamilies(physicalDevice, surface).isComplete() &&
+         features.samplerAnisotropy;
 }
 
 Device::Device(VkPhysicalDevice physicalDevice, const Surface& surface,
@@ -136,7 +140,9 @@ Device::Device(VkPhysicalDevice physicalDevice, const Surface& surface,
     });
   }
 
-  VkPhysicalDeviceFeatures deviceFeatures{};
+  VkPhysicalDeviceFeatures deviceFeatures{
+      .samplerAnisotropy = VK_TRUE,
+  };
 
   VkDeviceCreateInfo createInfo{
       .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
@@ -179,12 +185,24 @@ SwapChain Device::createSwapChain(const Window& window) const {
   return {*this, window, surface};
 }
 
+Image Device::createImage(VkExtent2D extent, VkImageType imageType,
+                          VkFormat format, VkImageTiling tiling,
+                          VkImageUsageFlags usage,
+                          VkMemoryPropertyFlags properties) const {
+  return {*this, extent, imageType, format, tiling, usage, properties};
+}
+
 ImageView Device::createImageView(VkImage image, VkFormat format,
                                   VkImageAspectFlagBits aspectFlags) const {
   return {*this, image, format, aspectFlags};
 }
 
-ShaderModule Device::createShaderModule(const std::string& filename) const {
+Sampler Device::createSampler(VkSamplerAddressMode addressMode, float minLod,
+                              float maxLod) const {
+  return {*this, addressMode, minLod, maxLod};
+}
+
+ShaderModule Device::createShaderModule(std::string filename) const {
   return {*this, filename};
 }
 

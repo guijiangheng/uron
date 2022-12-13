@@ -9,8 +9,8 @@
 
 namespace uron {
 
-Buffer::Buffer(const Device& device, size_t size, VkBufferUsageFlags usage,
-               VkMemoryPropertyFlags propertyFlags)
+Buffer::Buffer(const Device& device, VkDeviceSize size,
+               VkBufferUsageFlags usage, VkMemoryPropertyFlags propertyFlags)
     : device{device} {
   VkBufferCreateInfo createInfo{
       .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
@@ -38,6 +38,17 @@ Buffer::Buffer(Buffer&& other) noexcept
 
 Buffer::~Buffer() { vkDestroyBuffer(device, buffer, nullptr); }
 
+void* Buffer::map(VkDeviceSize offset, VkDeviceSize size) const {
+  return memory->map(offset, size);
+}
+
+void Buffer::fill(const void* data, VkDeviceSize offset,
+                  VkDeviceSize size) const {
+  memory->fill(data, offset, size);
+}
+
+void Buffer::unmap() const { memory->unmap(); }
+
 void Buffer::copy(const CommandPool& commandPool, const Buffer& src,
                   VkDeviceSize size, VkDeviceSize srcOffset,
                   VkDeviceSize dstOffset) const {
@@ -50,11 +61,5 @@ void Buffer::copy(const CommandPool& commandPool, const Buffer& src,
     vkCmdCopyBuffer(commandBuffer, src, buffer, 1, &copyRegion);
   });
 }
-
-void* Buffer::map(VkDeviceSize offset, VkDeviceSize size) const {
-  return memory->map(offset, size);
-}
-
-void Buffer::unmap() const { memory->unmap(); }
 
 }  // namespace uron

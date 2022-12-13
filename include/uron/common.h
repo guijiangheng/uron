@@ -13,6 +13,6 @@ namespace uron {
   ClassName(const ClassName&) = delete; \
   ClassName& operator=(const ClassName&) = delete
 
-std::vector<char> loadFile(const std::string& filename);
+std::vector<char> loadFile(std::string filename);
 
 }  // namespace uron

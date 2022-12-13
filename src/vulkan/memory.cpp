@@ -28,7 +28,7 @@ Memory::Memory(Memory&& other) noexcept : device{other.device} {
 
 Memory::~Memory() { vkFreeMemory(device, memory, nullptr); }
 
-void* Memory::map(size_t offset, size_t size) const {
+void* Memory::map(VkDeviceSize offset, VkDeviceSize size) const {
   void* address;
   VK_CHECK(vkMapMemory(device, memory, offset, size, 0, &address),
            "map buffer memory");
@@ -37,7 +37,8 @@ void* Memory::map(size_t offset, size_t size) const {
 
 void Memory::unmap() const { vkUnmapMemory(device, memory); }
 
-void Memory::fill(const void* data, size_t offset, size_t size) const {
+void Memory::fill(const void* data, VkDeviceSize offset,
+                  VkDeviceSize size) const {
   auto address = map(offset, size);
   memcpy(address, data, size);
   unmap();

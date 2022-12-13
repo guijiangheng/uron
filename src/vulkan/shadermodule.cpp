@@ -5,7 +5,7 @@
 
 namespace uron {
 
-ShaderModule::ShaderModule(const Device& device, const std::string& filename)
+ShaderModule::ShaderModule(const Device& device, std::string filename)
     : device{device} {
   createShaderModule(loadFile(filename));
 }

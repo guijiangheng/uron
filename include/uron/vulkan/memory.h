@@ -20,11 +20,11 @@ class Memory {
 
   operator VkDeviceMemory() const { return memory; }
 
-  void* map(size_t offset, size_t size) const;
+  void* map(VkDeviceSize offset, VkDeviceSize size) const;
 
   void unmap() const;
 
-  void fill(const void* data, size_t offset, size_t size) const;
+  void fill(const void* data, VkDeviceSize offset, VkDeviceSize size) const;
 
  private:
   const Device& device;

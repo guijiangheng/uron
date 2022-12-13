@@ -9,10 +9,13 @@ namespace uron {
 DescriptorSetBindings::DescriptorSetBindings(const Device& device)
     : device{device} {}
 
-void DescriptorSetBindings::addBinding(
+DescriptorSetBindings& DescriptorSetBindings::addBinding(
     const VkDescriptorSetLayoutBinding& binding) {
   assert(bindings.count(binding.binding) == 0 && "Binding already exists");
+
   bindings[binding.binding] = binding;
+
+  return *this;
 }
 
 DescriptorSetLayout DescriptorSetBindings::createLayout() const {
@@ -108,11 +111,12 @@ DescriptorSet::DescriptorSet(const Device& device, const DescriptorPool& pool,
            "create descriptor set");
 }
 
-void DescriptorSet::write(const VkDescriptorBufferInfo& bufferInfo) const {
+const DescriptorSet& DescriptorSet::write(
+    uint32_t dstBinding, const VkDescriptorBufferInfo& bufferInfo) const {
   VkWriteDescriptorSet descriptorWrite{
       .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
       .dstSet = descriptorSet,
-      .dstBinding = 0,
+      .dstBinding = dstBinding,
       .dstArrayElement = 0,
       .descriptorCount = 1,
       .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
@@ -120,6 +124,25 @@ void DescriptorSet::write(const VkDescriptorBufferInfo& bufferInfo) const {
   };
 
   vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
+
+  return *this;
+}
+
+const DescriptorSet& DescriptorSet::write(
+    uint32_t dstBinding, const VkDescriptorImageInfo& imageInfo) const {
+  VkWriteDescriptorSet descriptorWrite{
+      .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+      .dstSet = descriptorSet,
+      .dstBinding = dstBinding,
+      .dstArrayElement = 0,
+      .descriptorCount = 1,
+      .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+      .pImageInfo = &imageInfo,
+  };
+
+  vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
+
+  return *this;
 }
 
 }  // namespace uron

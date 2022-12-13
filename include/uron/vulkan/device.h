@@ -35,17 +35,19 @@ extern PFN_vkCmdTraceRaysKHR vkCmdTraceRaysKHR;
 class Window;
 class Surface;
 class SwapChain;
+class Sampler;
+class Image;
 class ImageView;
-class ShaderModule;
-class PipelineLayout;
-class RenderPass;
-class Pipeline;
 class FrameBuffer;
-class CommandPool;
+class ShaderModule;
+class DescriptorSetLayout;
+class RenderPass;
+class PipelineLayout;
+class Pipeline;
 class Fence;
 class Semaphore;
+class CommandPool;
 class Buffer;
-class DescriptorSetLayout;
 
 struct QueueFamilyIndices {
   std::optional<uint32_t> graphicsFamily;
@@ -78,13 +80,26 @@ class Device {
     return findQueueFamilies(physicalDevice, surface);
   };
 
+  VkPhysicalDeviceProperties getProperties() const {
+    VkPhysicalDeviceProperties properties;
+    vkGetPhysicalDeviceProperties(physicalDevice, &properties);
+    return properties;
+  }
+
   SwapChain createSwapChain(const Window& window) const;
+
+  Image createImage(VkExtent2D extent, VkImageType imageType, VkFormat format,
+                    VkImageTiling tiling, VkImageUsageFlags usage,
+                    VkMemoryPropertyFlags properties) const;
 
   ImageView createImageView(
       VkImage image, VkFormat format = VK_FORMAT_B8G8R8A8_SRGB,
       VkImageAspectFlagBits aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT) const;
 
-  ShaderModule createShaderModule(const std::string& filename) const;
+  Sampler createSampler(VkSamplerAddressMode addressMode, float minLod = 0.0f,
+                        float maxLod = 0.0f) const;
+
+  ShaderModule createShaderModule(std::string filename) const;
 
   PipelineLayout createPipelineLayout(
       const std::vector<const DescriptorSetLayout*>& layouts) const;

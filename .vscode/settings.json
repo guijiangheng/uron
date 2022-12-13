@@ -71,13 +71,17 @@
     "climits": "cpp",
     "ios": "cpp",
     "queue": "cpp",
-    "cstdbool": "cpp"
+    "cstdbool": "cpp",
+    "future": "cpp"
   },
   "cSpell.words": [
+    "mipmap",
     "multisampling",
+    "STBI",
     "Subpasses",
     "subresource",
     "Swapchains",
+    "unnormalized",
     "uron",
     "xoffset",
     "xpos",
