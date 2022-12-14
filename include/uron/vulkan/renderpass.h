@@ -13,6 +13,8 @@ class RenderPass {
 
   RenderPass(const Device& device, VkFormat colorImageFormat);
 
+  RenderPass(RenderPass&& other);
+
   ~RenderPass();
 
   operator VkRenderPass() const { return renderPass; }

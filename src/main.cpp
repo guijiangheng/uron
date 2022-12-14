@@ -6,6 +6,7 @@
 #include "uron/vulkan/buffer.h"
 #include "uron/vulkan/commandbuffer.h"
 #include "uron/vulkan/commandpool.h"
+#include "uron/vulkan/depthimage.h"
 #include "uron/vulkan/descriptors.h"
 #include "uron/vulkan/device.h"
 #include "uron/vulkan/fence.h"
@@ -61,13 +62,16 @@ const std::vector<uint16_t> indices = {
 
 std::vector<uron::FrameBuffer> createFrameBuffers(
     const uron::Device& device, const uron::SwapChain& swapChain,
-    const uron::RenderPass& renderPass) {
+    const uron::RenderPass& renderPass,
+    const std::vector<uron::DepthImage>& depthImages) {
   auto& swapChainExtent = swapChain.getExtent();
   auto& imageViews = swapChain.getImageViews();
   std::vector<uron::FrameBuffer> frameBuffers;
 
-  for (auto& imageView : imageViews) {
-    std::vector<const uron::ImageView*> attachments = {&imageView};
+  for (auto i = 0; i < imageViews.size(); ++i) {
+    const uron::ImageView& depthImageView = depthImages[i];
+    std::vector<const uron::ImageView*> attachments = {&imageViews[i],
+                                                       &depthImageView};
     frameBuffers.push_back(
         device.createFrameBuffer(renderPass, attachments, swapChainExtent));
   }
@@ -90,7 +94,6 @@ int main() {
     auto swapChain = device.createSwapChain(window);
     auto& swapChainExtent = swapChain.getExtent();
     auto renderPass = device.createRenderPass(swapChain.getColorImageFormat());
-    auto frameBuffers = createFrameBuffers(device, swapChain, renderPass);
 
     auto vertexShader = device.createShaderModule("../shaders/simple.vert.spv");
     auto fragmentShader =
@@ -130,6 +133,14 @@ int main() {
     auto queueFamilyIndices = device.findQueueFamilies();
     auto commandPool =
         device.createCommandPool(queueFamilyIndices.graphicsFamily.value());
+
+    auto swapChainImageCount = swapChain.getImageViews().size();
+    std::vector<uron::DepthImage> depthImages;
+    for (auto i = 0; i < swapChainImageCount; ++i) {
+      depthImages.emplace_back(device, commandPool, swapChainExtent);
+    }
+    auto frameBuffers =
+        createFrameBuffers(device, swapChain, renderPass, depthImages);
 
     int currentFrame = 0;
     std::vector<uron::Fence> inFlightFences;
@@ -228,7 +239,10 @@ int main() {
       commandBuffers[currentFrame].reset();
       commandBuffers[currentFrame].begin();
 
-      VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
+      VkClearValue clearValues[] = {
+          {.color = {{0.0f, 0.0f, 0.0f, 1.0f}}},
+          {.depthStencil = {1.0f, 0}},
+      };
       VkRenderPassBeginInfo renderPassInfo{
           .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
           .renderPass = renderPass,
@@ -238,8 +252,8 @@ int main() {
                   .offset = {0, 0},
                   .extent = swapChainExtent,
               },
-          .clearValueCount = 1,
-          .pClearValues = &clearColor,
+          .clearValueCount = 2,
+          .pClearValues = clearValues,
       };
       vkCmdBeginRenderPass(commandBuffer, &renderPassInfo,
                            VK_SUBPASS_CONTENTS_INLINE);
@@ -290,7 +304,12 @@ int main() {
 
       if (result == VK_ERROR_OUT_OF_DATE_KHR) {
         swapChain.recreate();
-        frameBuffers = createFrameBuffers(device, swapChain, renderPass);
+        depthImages.clear();
+        for (auto i = 0; i < swapChainImageCount; ++i) {
+          depthImages.emplace_back(device, commandPool, swapChainExtent);
+        }
+        frameBuffers =
+            createFrameBuffers(device, swapChain, renderPass, depthImages);
         return;
       } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
         throw std::runtime_error("failed to acquire swap chain image!");
@@ -339,7 +358,12 @@ int main() {
           resized) {
         resized = false;
         swapChain.recreate();
-        frameBuffers = createFrameBuffers(device, swapChain, renderPass);
+        depthImages.clear();
+        for (auto i = 0; i < swapChainImageCount; ++i) {
+          depthImages.emplace_back(device, commandPool, swapChainExtent);
+        }
+        frameBuffers =
+            createFrameBuffers(device, swapChain, renderPass, depthImages);
       } else if (result != VK_SUCCESS) {
         throw std::runtime_error("failed to present swap chain image!");
       }

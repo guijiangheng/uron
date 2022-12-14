@@ -26,6 +26,11 @@ PipelineLayout::PipelineLayout(
       "create pipeline layout");
 }
 
+PipelineLayout::PipelineLayout(PipelineLayout&& other) : device{device} {
+  pipelineLayout = other.pipelineLayout;
+  other.pipelineLayout = VK_NULL_HANDLE;
+}
+
 PipelineLayout::~PipelineLayout() {
   vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
 }

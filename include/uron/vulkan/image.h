@@ -20,6 +20,8 @@ class Image {
         VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage,
         VkMemoryPropertyFlags properties);
 
+  Image(Image&& other) noexcept;
+
   ~Image();
 
   void copy(const CommandPool& commandPool, const Buffer& buffer);

@@ -41,6 +41,15 @@ Image::Image(const Device& device, VkExtent2D extent, VkImageType imageType,
   vkBindImageMemory(device, image, *memory, 0);
 }
 
+Image::Image(Image&& other) noexcept
+    : device{other.device},
+      extent{other.extent},
+      format{other.format},
+      image{other.image},
+      memory{std::move(other.memory)} {
+  other.image = VK_NULL_HANDLE;
+}
+
 Image::~Image() { vkDestroyImage(device, image, nullptr); }
 
 void Image::copy(const CommandPool& commandPool, const Buffer& buffer) {

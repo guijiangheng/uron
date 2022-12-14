@@ -50,6 +50,8 @@ class Texture {
           VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT,
           float minLod = 0.0f, float maxLod = 0.0f);
 
+  Texture(Texture&&) = default;
+
   operator VkImage() const;
 
   operator VkImageView() const;

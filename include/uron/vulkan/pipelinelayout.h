@@ -14,6 +14,8 @@ class PipelineLayout {
   PipelineLayout(const Device& device,
                  const std::vector<const DescriptorSetLayout*>& layouts);
 
+  PipelineLayout(PipelineLayout&& other);
+
   ~PipelineLayout();
 
   operator VkPipelineLayout() const { return pipelineLayout; }
