@@ -14,7 +14,7 @@ class ImageView {
             VkFormat format = VK_FORMAT_B8G8R8A8_SRGB,
             VkImageAspectFlagBits aspectFlags = VK_IMAGE_ASPECT_COLOR_BIT);
 
-  ImageView(ImageView&& other) noexcept;
+  ImageView(ImageView&& rhs) noexcept;
 
   ~ImageView();
 

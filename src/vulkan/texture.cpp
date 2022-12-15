@@ -39,7 +39,7 @@ Texture::Texture(const Device& device, const CommandPool& commandPool,
       device.createBuffer(resource.size(), VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                           VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                               VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-  stagingBuffer.fill(resource.getPixels(), 0, resource.size());
+  stagingBuffer.write(resource.getPixels(), 0, resource.size());
 
   auto extent = VkExtent2D{static_cast<uint32_t>(resource.getWidth()),
                            static_cast<uint32_t>(resource.getHeight())};

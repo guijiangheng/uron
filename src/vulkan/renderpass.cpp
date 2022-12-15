@@ -70,9 +70,9 @@ RenderPass::RenderPass(const Device& device, VkFormat colorImageFormat)
            "create render pass");
 }
 
-RenderPass::RenderPass(RenderPass&& other) : device{other.device} {
-  renderPass = other.renderPass;
-  other.renderPass = VK_NULL_HANDLE;
+RenderPass::RenderPass(RenderPass&& rhs) : device{rhs.device} {
+  renderPass = rhs.renderPass;
+  rhs.renderPass = VK_NULL_HANDLE;
 }
 
 RenderPass::~RenderPass() { vkDestroyRenderPass(device, renderPass, nullptr); }

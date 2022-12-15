@@ -41,13 +41,13 @@ Image::Image(const Device& device, VkExtent2D extent, VkImageType imageType,
   vkBindImageMemory(device, image, *memory, 0);
 }
 
-Image::Image(Image&& other) noexcept
-    : device{other.device},
-      extent{other.extent},
-      format{other.format},
-      image{other.image},
-      memory{std::move(other.memory)} {
-  other.image = VK_NULL_HANDLE;
+Image::Image(Image&& rhs) noexcept
+    : device{rhs.device},
+      extent{rhs.extent},
+      format{rhs.format},
+      image{rhs.image},
+      memory{std::move(rhs.memory)} {
+  rhs.image = VK_NULL_HANDLE;
 }
 
 Image::~Image() { vkDestroyImage(device, image, nullptr); }
@@ -83,7 +83,7 @@ void Image::copy(const CommandPool& commandPool, const Buffer& buffer) {
 void Image::transitionImageLayout(const CommandPool& commandPool,
                                   VkImageLayout oldLayout,
                                   VkImageLayout newLayout) {
-  commandPool.execute([&](const CommandBuffer& commandBuffer) {
+  commandPool.execute([&](auto& commandBuffer) {
     VkImageMemoryBarrier barrier{
         .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
         .oldLayout = oldLayout,

@@ -14,17 +14,22 @@ class Memory {
   Memory(const Device& device, VkMemoryRequirements requirements,
          VkMemoryPropertyFlags properties);
 
-  Memory(Memory&& other) noexcept;
+  Memory(Memory&& rhs) noexcept;
 
   ~Memory();
 
   operator VkDeviceMemory() const { return memory; }
 
-  void* map(VkDeviceSize offset, VkDeviceSize size) const;
+  void* map(VkDeviceSize offset = 0, VkDeviceSize size = VK_WHOLE_SIZE) const;
 
   void unmap() const;
 
-  void fill(const void* data, VkDeviceSize offset, VkDeviceSize size) const;
+  void write(const void* data, VkDeviceSize offset, VkDeviceSize size) const;
+
+  void flush(VkDeviceSize offset = 0, VkDeviceSize size = VK_WHOLE_SIZE) const;
+
+  void invalidate(VkDeviceSize offset = 0,
+                  VkDeviceSize size = VK_WHOLE_SIZE) const;
 
  private:
   const Device& device;

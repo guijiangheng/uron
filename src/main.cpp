@@ -42,24 +42,6 @@ const std::vector<const char*> extensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
 constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
-const std::vector<uron::Vertex> vertices = {
-    {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {}, {1.0f, 0.0f}},
-    {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {}, {0.0f, 0.0f}},
-    {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {}, {0.0f, 1.0f}},
-    {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {}, {1.0f, 1.0f}},
-
-    {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {}, {1.0f, 0.0f}},
-    {{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {}, {0.0f, 0.0f}},
-    {{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {}, {0.0f, 1.0f}},
-    {{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {}, {1.0f, 1.0f}},
-};
-
-const std::vector<uint16_t> indices = {
-    0, 1, 2, 2, 3, 0,
-
-    4, 5, 6, 6, 7, 4,
-};
-
 std::vector<uron::FrameBuffer> createFrameBuffers(
     const uron::Device& device, const uron::SwapChain& swapChain,
     const uron::RenderPass& renderPass,
@@ -81,7 +63,7 @@ std::vector<uron::FrameBuffer> createFrameBuffers(
 
 int main() {
   try {
-    uron::TextureResource textureResource("../assets/textures/texture.jpg");
+    uron::TextureResource textureResource("../assets/viking_room.png");
 
     auto resized = false;
     uron::Window window{800, 600, "Hello Vulkan"};
@@ -133,6 +115,7 @@ int main() {
     auto queueFamilyIndices = device.findQueueFamilies();
     auto commandPool =
         device.createCommandPool(queueFamilyIndices.graphicsFamily.value());
+    uron::Model model{device, commandPool, "../assets/viking_room.obj"};
 
     auto swapChainImageCount = swapChain.getImageViews().size();
     std::vector<uron::DepthImage> depthImages;
@@ -164,7 +147,7 @@ int main() {
                                   VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                                   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                                       VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-      uniformBufferAddrs[i] = (uniformBuffers[i].map(0, uniformBufferSize));
+      uniformBufferAddrs[i] = (uniformBuffers[i].map());
     }
 
     auto texture = uron::Texture(device, commandPool, textureResource);
@@ -183,34 +166,6 @@ int main() {
                         .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                     });
     }
-
-    auto bufferSize = sizeof(uron::Vertex) * vertices.size();
-    auto stagingBuffer =
-        device.createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                                VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-    auto data = stagingBuffer.map(0, bufferSize);
-    memcpy(data, vertices.data(), bufferSize);
-    stagingBuffer.unmap();
-
-    auto buffer = device.createBuffer(
-        bufferSize,
-        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    buffer.copy(commandPool, stagingBuffer, bufferSize);
-
-    auto indexBufferSize = sizeof(indices[0]) * indices.size();
-    auto indexStagingBuffer =
-        device.createBuffer(indexBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                                VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-    auto indicesData = indexStagingBuffer.map(0, indexBufferSize);
-    memcpy(indicesData, indices.data(), indexBufferSize);
-    auto indexBuffer = device.createBuffer(
-        indexBufferSize,
-        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    indexBuffer.copy(commandPool, indexStagingBuffer, indexBufferSize);
 
     auto updateUniformBuffer = [&](uint32_t currentImage) {
       static auto startTime = std::chrono::high_resolution_clock::now();
@@ -277,17 +232,12 @@ int main() {
       };
       vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-      VkBuffer buffers[] = {buffer};
-      VkDeviceSize offsets[] = {0};
       VkDescriptorSet mDescriptorSet = descriptorSets[currentFrame];
-      vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers, offsets);
-      vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT16);
       vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                               pipelineLayout, 0, 1, &mDescriptorSet, 0,
                               nullptr);
-
-      vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1,
-                       0, 0, 0);
+      model.bind(commandBuffer);
+      model.draw(commandBuffer);
 
       vkCmdEndRenderPass(commandBuffer);
 

@@ -18,19 +18,24 @@ class Buffer {
   Buffer(const Device& device, VkDeviceSize size, VkBufferUsageFlags usage,
          VkMemoryPropertyFlags propertyFlags);
 
-  Buffer(Buffer&& other) noexcept;
+  Buffer(Buffer&& rhs) noexcept;
 
   ~Buffer();
 
-  void fill(const void* data, VkDeviceSize offset, VkDeviceSize size) const;
-
-  void* map(VkDeviceSize offset, VkDeviceSize size) const;
+  void* map(VkDeviceSize offset = 0, VkDeviceSize size = VK_WHOLE_SIZE) const;
 
   void unmap() const;
 
+  void write(const void* data, VkDeviceSize offset, VkDeviceSize size) const;
+
   void copy(const CommandPool& commandPool, const Buffer& src,
-            VkDeviceSize size, VkDeviceSize srcOffset = 0,
-            VkDeviceSize dstOffset = 0) const;
+            VkDeviceSize srcOffset, VkDeviceSize dstOffset,
+            VkDeviceSize size) const;
+
+  void flush(VkDeviceSize offset = 0, VkDeviceSize size = VK_WHOLE_SIZE) const;
+
+  void invalidate(VkDeviceSize offset = 0,
+                  VkDeviceSize size = VK_WHOLE_SIZE) const;
 
   operator VkBuffer() const { return buffer; }
 

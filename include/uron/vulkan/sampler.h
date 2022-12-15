@@ -15,7 +15,7 @@ class Sampler {
           VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT,
           float minLod = 0.0f, float maxLod = 0.0f);
 
-  Sampler(Sampler&& other);
+  Sampler(Sampler&& rhs);
 
   ~Sampler();
 

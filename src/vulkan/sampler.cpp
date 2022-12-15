@@ -32,9 +32,9 @@ Sampler::Sampler(const Device& device, VkSamplerAddressMode addressMode,
            "create sampler");
 }
 
-Sampler::Sampler(Sampler&& other) : device{device} {
-  sampler = other.sampler;
-  other.sampler = VK_NULL_HANDLE;
+Sampler::Sampler(Sampler&& rhs) : device{device} {
+  sampler = rhs.sampler;
+  rhs.sampler = VK_NULL_HANDLE;
 }
 
 Sampler::~Sampler() { vkDestroySampler(device, sampler, nullptr); }

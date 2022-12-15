@@ -18,7 +18,7 @@ class TextureResource {
  public:
   TextureResource(std::string path);
 
-  TextureResource(TextureResource&& other) = default;
+  TextureResource(TextureResource&& rhs) = default;
 
   ~TextureResource();
 

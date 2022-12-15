@@ -13,9 +13,9 @@ Fence::Fence(const Device& device) : device{device} {
   VK_CHECK(vkCreateFence(device, &createInfo, nullptr, &fence), "create fence");
 }
 
-Fence::Fence(Fence&& other) noexcept : device{other.device} {
-  fence = other.fence;
-  other.fence = VK_NULL_HANDLE;
+Fence::Fence(Fence&& rhs) noexcept : device{rhs.device} {
+  fence = rhs.fence;
+  rhs.fence = VK_NULL_HANDLE;
 }
 
 Fence::~Fence() { vkDestroyFence(device, fence, nullptr); }

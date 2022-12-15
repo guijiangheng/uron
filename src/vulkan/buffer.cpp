@@ -30,10 +30,10 @@ Buffer::Buffer(const Device& device, VkDeviceSize size,
   vkBindBufferMemory(device, buffer, *memory, 0);
 }
 
-Buffer::Buffer(Buffer&& other) noexcept
-    : device{other.device}, memory{std::move(other.memory)} {
-  buffer = other.buffer;
-  other.buffer = VK_NULL_HANDLE;
+Buffer::Buffer(Buffer&& rhs) noexcept
+    : device{rhs.device}, memory{std::move(rhs.memory)} {
+  buffer = rhs.buffer;
+  rhs.buffer = VK_NULL_HANDLE;
 }
 
 Buffer::~Buffer() { vkDestroyBuffer(device, buffer, nullptr); }
@@ -42,16 +42,24 @@ void* Buffer::map(VkDeviceSize offset, VkDeviceSize size) const {
   return memory->map(offset, size);
 }
 
-void Buffer::fill(const void* data, VkDeviceSize offset,
-                  VkDeviceSize size) const {
-  memory->fill(data, offset, size);
+void Buffer::write(const void* data, VkDeviceSize offset,
+                   VkDeviceSize size) const {
+  memory->write(data, offset, size);
 }
 
 void Buffer::unmap() const { memory->unmap(); }
 
+void Buffer::flush(VkDeviceSize offset, VkDeviceSize size) const {
+  memory->flush(offset, size);
+}
+
+void Buffer::invalidate(VkDeviceSize offset, VkDeviceSize size) const {
+  memory->invalidate(offset, size);
+}
+
 void Buffer::copy(const CommandPool& commandPool, const Buffer& src,
-                  VkDeviceSize size, VkDeviceSize srcOffset,
-                  VkDeviceSize dstOffset) const {
+                  VkDeviceSize srcOffset, VkDeviceSize dstOffset,
+                  VkDeviceSize size) const {
   commandPool.execute([&](const CommandBuffer& commandBuffer) {
     VkBufferCopy copyRegion = {
         .srcOffset = srcOffset,

@@ -13,7 +13,7 @@ class RenderPass {
 
   RenderPass(const Device& device, VkFormat colorImageFormat);
 
-  RenderPass(RenderPass&& other);
+  RenderPass(RenderPass&& rhs);
 
   ~RenderPass();
 

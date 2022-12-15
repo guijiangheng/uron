@@ -21,9 +21,9 @@ Memory::Memory(const Device& device, VkMemoryRequirements requirements,
            "allocate memory");
 }
 
-Memory::Memory(Memory&& other) noexcept : device{other.device} {
-  memory = other.memory;
-  other.memory = VK_NULL_HANDLE;
+Memory::Memory(Memory&& rhs) noexcept : device{rhs.device} {
+  memory = rhs.memory;
+  rhs.memory = VK_NULL_HANDLE;
 }
 
 Memory::~Memory() { vkFreeMemory(device, memory, nullptr); }
@@ -37,11 +37,28 @@ void* Memory::map(VkDeviceSize offset, VkDeviceSize size) const {
 
 void Memory::unmap() const { vkUnmapMemory(device, memory); }
 
-void Memory::fill(const void* data, VkDeviceSize offset,
-                  VkDeviceSize size) const {
+void Memory::write(const void* data, VkDeviceSize offset,
+                   VkDeviceSize size) const {
   auto address = map(offset, size);
   memcpy(address, data, size);
   unmap();
+}
+
+void Memory::flush(VkDeviceSize offset, VkDeviceSize size) const {
+  VkMappedMemoryRange range = {.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE,
+                               .memory = memory,
+                               .offset = offset,
+                               .size = size};
+  VK_CHECK(vkFlushMappedMemoryRanges(device, 1, &range), "flush buffer memory");
+}
+
+void Memory::invalidate(VkDeviceSize offset, VkDeviceSize size) const {
+  VkMappedMemoryRange range = {.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE,
+                               .memory = memory,
+                               .offset = offset,
+                               .size = size};
+  VK_CHECK(vkInvalidateMappedMemoryRanges(device, 1, &range),
+           "invalidate buffer memory");
 }
 
 uint32_t Memory::findMemoryType(uint32_t typeFilter,

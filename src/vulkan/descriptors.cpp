@@ -56,10 +56,10 @@ DescriptorSetLayout::DescriptorSetLayout(
            "create descriptor set layout");
 }
 
-DescriptorSetLayout::DescriptorSetLayout(DescriptorSetLayout&& other) noexcept
-    : device{other.device} {
-  layout = other.layout;
-  other.layout = VK_NULL_HANDLE;
+DescriptorSetLayout::DescriptorSetLayout(DescriptorSetLayout&& rhs) noexcept
+    : device{rhs.device} {
+  layout = rhs.layout;
+  rhs.layout = VK_NULL_HANDLE;
 }
 
 DescriptorSetLayout::~DescriptorSetLayout() {
@@ -81,10 +81,10 @@ DescriptorPool::DescriptorPool(
            "create descriptor pool");
 }
 
-DescriptorPool::DescriptorPool(DescriptorPool&& other) noexcept
-    : device{other.device} {
-  pool = other.pool;
-  other.pool = VK_NULL_HANDLE;
+DescriptorPool::DescriptorPool(DescriptorPool&& rhs) noexcept
+    : device{rhs.device} {
+  pool = rhs.pool;
+  rhs.pool = VK_NULL_HANDLE;
 }
 
 DescriptorPool::~DescriptorPool() {

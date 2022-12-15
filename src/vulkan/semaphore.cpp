@@ -12,9 +12,9 @@ Semaphore::Semaphore(const Device& device) : device{device} {
            "create semaphore");
 }
 
-Semaphore::Semaphore(Semaphore&& other) noexcept : device(other.device) {
-  semaphore = other.semaphore;
-  other.semaphore = VK_NULL_HANDLE;
+Semaphore::Semaphore(Semaphore&& rhs) noexcept : device(rhs.device) {
+  semaphore = rhs.semaphore;
+  rhs.semaphore = VK_NULL_HANDLE;
 }
 
 Semaphore::~Semaphore() { vkDestroySemaphore(device, semaphore, nullptr); }
