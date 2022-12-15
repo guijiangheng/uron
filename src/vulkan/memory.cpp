@@ -21,9 +21,9 @@ Memory::Memory(const Device& device, VkMemoryRequirements requirements,
            "allocate memory");
 }
 
-Memory::Memory(Memory&& other) noexcept : device{other.device} {
-  memory = other.memory;
-  other.memory = VK_NULL_HANDLE;
+Memory::Memory(Memory&& rhs) noexcept : device{rhs.device} {
+  memory = rhs.memory;
+  rhs.memory = VK_NULL_HANDLE;
 }
 
 Memory::~Memory() { vkFreeMemory(device, memory, nullptr); }

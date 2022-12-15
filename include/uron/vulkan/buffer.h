@@ -18,7 +18,7 @@ class Buffer {
   Buffer(const Device& device, VkDeviceSize size, VkBufferUsageFlags usage,
          VkMemoryPropertyFlags propertyFlags);
 
-  Buffer(Buffer&& other) noexcept;
+  Buffer(Buffer&& rhs) noexcept;
 
   ~Buffer();
 
@@ -29,8 +29,8 @@ class Buffer {
   void unmap() const;
 
   void copy(const CommandPool& commandPool, const Buffer& src,
-            VkDeviceSize size, VkDeviceSize srcOffset = 0,
-            VkDeviceSize dstOffset = 0) const;
+            VkDeviceSize srcOffset, VkDeviceSize dstOffset,
+            VkDeviceSize size) const;
 
   operator VkBuffer() const { return buffer; }
 

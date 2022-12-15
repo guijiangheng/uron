@@ -13,7 +13,7 @@ class Fence {
 
   Fence(const Device& device);
 
-  Fence(Fence&& other) noexcept;
+  Fence(Fence&& rhs) noexcept;
 
   ~Fence();
 

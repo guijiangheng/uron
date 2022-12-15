@@ -17,7 +17,7 @@ class FrameBuffer {
               const std::vector<const ImageView*>& attachments,
               const VkExtent2D& extent);
 
-  FrameBuffer(FrameBuffer&& other) noexcept;
+  FrameBuffer(FrameBuffer&& rhs) noexcept;
 
   ~FrameBuffer();
 

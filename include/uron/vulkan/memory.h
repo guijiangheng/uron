@@ -14,7 +14,7 @@ class Memory {
   Memory(const Device& device, VkMemoryRequirements requirements,
          VkMemoryPropertyFlags properties);
 
-  Memory(Memory&& other) noexcept;
+  Memory(Memory&& rhs) noexcept;
 
   ~Memory();
 

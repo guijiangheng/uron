@@ -14,7 +14,7 @@ class PipelineLayout {
   PipelineLayout(const Device& device,
                  const std::vector<const DescriptorSetLayout*>& layouts);
 
-  PipelineLayout(PipelineLayout&& other);
+  PipelineLayout(PipelineLayout&& rhs);
 
   ~PipelineLayout();
 
